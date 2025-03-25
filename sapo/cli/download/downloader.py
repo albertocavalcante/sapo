@@ -33,54 +33,52 @@ def download_file(url: str, local_path: Path, timeout: int = 30) -> bool:
         return False
 
     # Use a temporary file during download
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    temp_file = None
+    temp_path = None
+    try:
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
         temp_path = Path(temp_file.name)
+        temp_file.close()
 
-        try:
-            console.print(f"[dim]URL: {url}[/dim]")
-            with requests.get(url, stream=True, timeout=timeout) as response:
-                response.raise_for_status()
-                total_size = int(response.headers.get("content-length", 0))
+        console.print(f"[dim]URL: {url}[/dim]")
+        with requests.get(url, stream=True, timeout=timeout) as response:
+            response.raise_for_status()
+            total_size = int(response.headers.get("content-length", 0))
 
-                if total_size == 0:
-                    console.print(
-                        "[yellow]Warning: Content length not provided by server, progress may be inaccurate[/]"
-                    )
+            if total_size == 0:
+                console.print(
+                    "[yellow]Warning: Content length not provided by server, progress may be inaccurate[/]"
+                )
 
-                with ProgressTracker(
-                    f"Downloading {local_path.name}", total_size
-                ) as progress:
+            with ProgressTracker(
+                f"Downloading {local_path.name}", total_size
+            ) as progress:
+                with open(temp_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:  # filter out keep-alive new chunks
-                            temp_file.write(chunk)
+                            f.write(chunk)
                             progress.update(len(chunk))
 
-            # Move the temp file to the final destination
-            try:
-                temp_path.rename(local_path)
-                return True
-            except (OSError, PermissionError) as e:
-                console.print(
-                    f"[bold red]Error moving file to {local_path}: {str(e)}[/]"
-                )
-                temp_path.unlink(missing_ok=True)
-                return False
-
-        except requests.Timeout:
+        # Move the temp file to the final destination
+        try:
+            temp_path.rename(local_path)
+            return True
+        except (OSError, PermissionError) as e:
             console.print(
-                "[bold red]Error: Download timed out. Please check your connection and try again.[/]"
+                f"[bold red]Error moving file to {local_path}: {str(e)}[/]"
             )
-            temp_path.unlink(missing_ok=True)
             return False
-        except requests.exceptions.SSLError as e:
-            console.print(f"[bold red]Error: SSL verification failed: {str(e)}[/]")
-            temp_path.unlink(missing_ok=True)
-            return False
-        except requests.exceptions.ConnectionError as e:
-            console.print(f"[bold red]Error: Connection failed: {str(e)}[/]")
-            temp_path.unlink(missing_ok=True)
-            return False
-        except requests.exceptions.RequestException as e:
-            console.print(f"[bold red]Error: Download failed: {str(e)}[/]")
-            temp_path.unlink(missing_ok=True)
-            return False
+
+    except requests.exceptions.RequestException as e:
+        error_type = type(e).__name__.replace("Exception", "")
+        error_msg = str(e) if str(e) else ""
+        console.print(f"[bold red]Error: {error_type} failed: {error_msg}[/]")
+        return False
+
+    finally:
+        # Clean up temp file if it exists
+        if temp_path and temp_path.exists():
+            try:
+                temp_path.unlink(missing_ok=True)
+            except PermissionError:
+                pass  # Ignore permission errors during cleanup
