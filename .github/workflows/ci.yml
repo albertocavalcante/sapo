@@ -154,7 +154,7 @@ jobs:
       - name: Run security checks
         run: |
           poetry run bandit -r sapo
-          poetry run safety check
+          poetry run safety scan
 
   build:
     name: Build
