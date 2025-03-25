@@ -38,7 +38,10 @@ def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | N
                 if item.is_file() or item.is_dir():
                     existing_files.append(item.name)
             if existing_files:
-                return False, f"Directory contains existing files: {', '.join(existing_files)}"
+                return (
+                    False,
+                    f"Directory contains existing files: {', '.join(existing_files)}",
+                )
 
         # Check file extension
         if archive_path.name.endswith(".tar.gz") or archive_path.name.endswith(".tgz"):
@@ -65,7 +68,10 @@ def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | N
                             return False, f"Error creating directory: {str(e)}"
                         # Extract the file
                         try:
-                            with zip_ref.open(member) as source, open(target_path, "wb") as target:
+                            with (
+                                zip_ref.open(member) as source,
+                                open(target_path, "wb") as target,
+                            ):
                                 shutil.copyfileobj(source, target)
                         except (OSError, PermissionError) as e:
                             return False, f"Error extracting file: {str(e)}"
