@@ -4,6 +4,8 @@ import os
 import tarfile
 import zipfile
 from pathlib import Path
+import platform
+import pytest
 
 from sapo.cli.archive import extract_archive
 
@@ -87,6 +89,7 @@ def test_extract_corrupted_archive(tmp_path):
     assert error is not None
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="Permission test not reliable on Windows")
 def test_extract_permission_error(tmp_path):
     """Test extracting with permission error."""
     archive_path = create_test_tar(tmp_path)
