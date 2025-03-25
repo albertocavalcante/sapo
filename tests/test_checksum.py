@@ -32,7 +32,9 @@ def test_verify_checksum_success(test_file):
         mock_response.text = calculate_sha256(test_file)
 
         assert verify_checksum(test_file, "http://example.com/checksum.sha256")
-        mock_get.assert_called_once_with("http://example.com/checksum.sha256")
+        mock_get.assert_called_once_with(
+            "http://example.com/checksum.sha256", timeout=30
+        )
 
 
 def test_verify_checksum_mismatch(test_file):
@@ -43,7 +45,9 @@ def test_verify_checksum_mismatch(test_file):
         mock_response.text = "different_checksum"
 
         assert not verify_checksum(test_file, "http://example.com/checksum.sha256")
-        mock_get.assert_called_once_with("http://example.com/checksum.sha256")
+        mock_get.assert_called_once_with(
+            "http://example.com/checksum.sha256", timeout=30
+        )
 
 
 def test_verify_checksum_download_failure(test_file):
@@ -53,7 +57,9 @@ def test_verify_checksum_download_failure(test_file):
         mock_response.ok = False
 
         assert not verify_checksum(test_file, "http://example.com/checksum.sha256")
-        mock_get.assert_called_once_with("http://example.com/checksum.sha256")
+        mock_get.assert_called_once_with(
+            "http://example.com/checksum.sha256", timeout=30
+        )
 
 
 def test_verify_checksum_request_error(test_file):
