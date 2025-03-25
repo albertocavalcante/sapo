@@ -22,6 +22,8 @@ Sapo is a command-line tool that simplifies the process of downloading and insta
 
 For a complete list of available Artifactory OSS versions, visit the [official JFrog releases page](https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/).
 
+For detailed information about single-node installation, including prerequisites and system requirements, refer to the [official JFrog single-node installation documentation](https://jfrog.com/help/r/jfrog-installation-setup-documentation/artifactory-single-node-installation).
+
 ## Installation
 
 You can install Sapo in several ways:
