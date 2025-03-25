@@ -5,6 +5,11 @@ A CLI tool for downloading and installing JFrog Artifactory OSS.
 ## 📑 Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)
+  - [Using pipx (Recommended)](#using-pipx-recommended-)
+  - [Alternative Installation Methods](#alternative-installation-methods-)
+    - [Using Docker Compose](#using-docker-compose-)
+    - [Using Helm (Kubernetes)](#using-helm-kubernetes-)
+    - [Using Poetry (Development)](#using-poetry-development-)
 - [Usage](#usage)
   - [Basic Commands](#basic-commands)
   - [Platform-Specific Behavior](#platform-specific-behavior)
@@ -15,6 +20,10 @@ A CLI tool for downloading and installing JFrog Artifactory OSS.
 ## Overview
 
 Sapo is a command-line tool that simplifies the process of downloading and installing JFrog Artifactory OSS. It provides a user-friendly interface to manage different versions and platforms of Artifactory.
+
+For a complete list of available Artifactory OSS versions, visit the [official JFrog releases page](https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/).
+
+For detailed information about single-node installation, including prerequisites and system requirements, refer to the [official JFrog single-node installation documentation](https://jfrog.com/help/r/jfrog-installation-setup-documentation/artifactory-single-node-installation).
 
 ## Installation
 
@@ -30,7 +39,15 @@ poetry build
 pipx install dist/sapo-0.1.0.tar.gz
 ```
 
-### Using Poetry (Alternative) 🛠️
+### Alternative Installation Methods 🔧
+
+#### Using Docker Compose 🐳
+If you prefer using Docker, you can install Artifactory using Docker Compose. This method is particularly useful for containerized environments or when you want to run Artifactory in isolation. For detailed instructions, see the [official JFrog documentation](https://jfrog.com/help/r/jfrog-installation-setup-documentation/install-artifactory-single-node-with-docker-compose).
+
+#### Using Helm (Kubernetes) 🎮
+For Kubernetes environments, you can install Artifactory using the official JFrog Helm chart. This method is ideal for container orchestration and provides additional features like automatic scaling and high availability. For detailed instructions, see the [official JFrog Helm chart documentation](https://github.com/jfrog/charts/tree/master/stable/artifactory-oss).
+
+#### Using Poetry (Development) 🛠️
 
 ```bash
 poetry install
