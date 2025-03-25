@@ -88,8 +88,11 @@ def get_available_versions(base_url: str) -> List[str]:
     Raises:
         requests.exceptions.RequestException: If versions cannot be fetched
     """
-    response = requests.get(f"{base_url}/jfrog-artifactory-oss/")
-    response.raise_for_status()
+    try:
+        response = requests.get(f"{base_url}/jfrog-artifactory-oss/", timeout=30)
+        response.raise_for_status()
+    except Exception as e:
+        raise requests.exceptions.RequestException(f"Error fetching versions: {str(e)}")
 
     versions = []
     for line in response.text.splitlines():

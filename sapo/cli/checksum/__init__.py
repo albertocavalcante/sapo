@@ -45,7 +45,7 @@ def verify_checksum(file_path: Path, expected_checksum_url: str) -> bool:
             return False
 
         # Get expected checksum from the server
-        response = requests.get(expected_checksum_url)
+        response = requests.get(expected_checksum_url, timeout=30)  # 30 seconds timeout
         if not response.ok:
             console.print("[red]Failed to download checksum file[/]")
             return False
