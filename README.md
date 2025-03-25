@@ -8,6 +8,7 @@ A CLI tool for downloading and installing JFrog Artifactory OSS.
   - [Using pipx (Recommended)](#using-pipx-recommended-)
   - [Alternative Installation Methods](#alternative-installation-methods-)
     - [Using Docker Compose](#using-docker-compose-)
+    - [Using Helm (Kubernetes)](#using-helm-kubernetes-)
     - [Using Poetry (Development)](#using-poetry-development-)
 - [Usage](#usage)
   - [Basic Commands](#basic-commands)
@@ -42,6 +43,9 @@ pipx install dist/sapo-0.1.0.tar.gz
 
 #### Using Docker Compose 🐳
 If you prefer using Docker, you can install Artifactory using Docker Compose. This method is particularly useful for containerized environments or when you want to run Artifactory in isolation. For detailed instructions, see the [official JFrog documentation](https://jfrog.com/help/r/jfrog-installation-setup-documentation/install-artifactory-single-node-with-docker-compose).
+
+#### Using Helm (Kubernetes) 🎮
+For Kubernetes environments, you can install Artifactory using the official JFrog Helm chart. This method is ideal for container orchestration and provides additional features like automatic scaling and high availability. For detailed instructions, see the [official JFrog Helm chart documentation](https://github.com/jfrog/charts/tree/master/stable/artifactory-oss).
 
 #### Using Poetry (Development) 🛠️
 
