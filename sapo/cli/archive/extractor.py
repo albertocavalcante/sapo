@@ -10,7 +10,7 @@ from rich.console import Console
 console = Console()
 
 
-def extract_archive(archive_path: Path, extract_to: Path) -> bool:
+def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | None]:
     """
     Extract an archive file to the specified directory.
     Supports tar.gz and zip formats.
@@ -20,21 +20,34 @@ def extract_archive(archive_path: Path, extract_to: Path) -> bool:
         extract_to: Directory to extract to
 
     Returns:
-        bool: True if extraction was successful, False otherwise
+        tuple[bool, str | None]: A tuple containing:
+            - bool: True if extraction was successful, False otherwise
+            - str | None: Error message if extraction failed, or None if successful
     """
     try:
         # Create extract directory if it doesn't exist
-        extract_to.mkdir(parents=True, exist_ok=True)
+        try:
+            extract_to.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            return False, f"Error creating directory: {str(e)}"
+
+        # Check for existing files
+        if extract_to.exists():
+            existing_files = []
+            for item in extract_to.iterdir():
+                if item.is_file() or item.is_dir():
+                    existing_files.append(item.name)
+            if existing_files:
+                return False, f"Directory contains existing files: {', '.join(existing_files)}"
 
         # Check file extension
         if archive_path.name.endswith(".tar.gz") or archive_path.name.endswith(".tgz"):
             with tarfile.open(archive_path, "r:gz") as tar:
                 try:
                     tar.extractall(path=extract_to)
-                    return True
+                    return True, None
                 except (OSError, PermissionError) as e:
-                    console.print(f"[bold red]Error extracting archive: {str(e)}[/]")
-                    return False
+                    return False, f"Error extracting archive: {str(e)}"
         elif archive_path.suffix == ".zip":
             with zipfile.ZipFile(archive_path, "r") as zip_ref:
                 try:
@@ -46,26 +59,23 @@ def extract_archive(archive_path: Path, extract_to: Path) -> bool:
                         # Get the target path
                         target_path = extract_to / member
                         # Create parent directories if they don't exist
-                        target_path.parent.mkdir(parents=True, exist_ok=True)
+                        try:
+                            target_path.parent.mkdir(parents=True, exist_ok=True)
+                        except (OSError, PermissionError) as e:
+                            return False, f"Error creating directory: {str(e)}"
                         # Extract the file
-                        with (
-                            zip_ref.open(member) as source,
-                            open(target_path, "wb") as target,
-                        ):
-                            shutil.copyfileobj(source, target)
-                    return True
+                        try:
+                            with zip_ref.open(member) as source, open(target_path, "wb") as target:
+                                shutil.copyfileobj(source, target)
+                        except (OSError, PermissionError) as e:
+                            return False, f"Error extracting file: {str(e)}"
+                    return True, None
                 except (OSError, PermissionError) as e:
-                    console.print(f"[bold red]Error extracting archive: {str(e)}[/]")
-                    return False
+                    return False, f"Error extracting archive: {str(e)}"
         else:
-            console.print(
-                f"[bold red]Error: Unsupported archive format: {archive_path.suffix}[/]"
-            )
-            return False
+            return False, f"Unsupported archive format: {archive_path.suffix}"
 
     except (OSError, PermissionError) as e:
-        console.print(f"[bold red]Error accessing archive: {str(e)}[/]")
-        return False
+        return False, f"Error accessing archive: {str(e)}"
     except (tarfile.TarError, zipfile.BadZipFile) as e:
-        console.print(f"[bold red]Error reading archive: {str(e)}[/]")
-        return False
+        return False, f"Error reading archive: {str(e)}"

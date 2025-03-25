@@ -45,7 +45,8 @@ def test_extract_tar(tmp_path):
     archive_path = create_test_tar(tmp_path)
     extract_to = tmp_path / "extract"
 
-    assert extract_archive(archive_path, extract_to)
+    success, error = extract_archive(archive_path, extract_to)
+    assert success, error
     assert (extract_to / "test.txt").exists()
     assert (extract_to / "test.txt").read_text() == "test content"
     assert (extract_to / "test_dir" / "subfile.txt").exists()
@@ -57,7 +58,8 @@ def test_extract_zip(tmp_path):
     archive_path = create_test_zip(tmp_path)
     extract_to = tmp_path / "extract"
 
-    assert extract_archive(archive_path, extract_to)
+    success, error = extract_archive(archive_path, extract_to)
+    assert success, error
     assert (extract_to / "test.txt").exists()
     assert (extract_to / "test.txt").read_text() == "test content"
     assert (extract_to / "test_dir" / "subfile.txt").exists()
@@ -69,7 +71,9 @@ def test_extract_nonexistent_archive(tmp_path):
     archive_path = tmp_path / "nonexistent.tar.gz"
     extract_to = tmp_path / "extract"
 
-    assert not extract_archive(archive_path, extract_to)
+    success, error = extract_archive(archive_path, extract_to)
+    assert not success
+    assert error is not None
 
 
 def test_extract_corrupted_archive(tmp_path):
@@ -78,7 +82,9 @@ def test_extract_corrupted_archive(tmp_path):
     archive_path.write_bytes(b"corrupted content")
     extract_to = tmp_path / "extract"
 
-    assert not extract_archive(archive_path, extract_to)
+    success, error = extract_archive(archive_path, extract_to)
+    assert not success
+    assert error is not None
 
 
 def test_extract_permission_error(tmp_path):
@@ -90,17 +96,19 @@ def test_extract_permission_error(tmp_path):
     extract_to.mkdir()
     os.chmod(extract_to, 0o444)  # Read-only
 
-    assert not extract_archive(archive_path, extract_to)
+    success, error = extract_archive(archive_path, extract_to)
+    assert not success
+    assert error is not None
 
 
 def test_extract_existing_directory(tmp_path):
-    """Test extracting to an existing directory."""
+    """Test extracting to an existing directory with files."""
     archive_path = create_test_tar(tmp_path)
     extract_to = tmp_path / "extract"
     extract_to.mkdir()
     (extract_to / "existing.txt").write_text("existing content")
 
-    assert extract_archive(archive_path, extract_to)
-    assert (extract_to / "test.txt").exists()
-    assert (extract_to / "test.txt").read_text() == "test content"
-    assert not (extract_to / "existing.txt").exists()  # Should be overwritten
+    success, error = extract_archive(archive_path, extract_to)
+    assert not success
+    assert "existing files" in error.lower()
+    assert "existing.txt" in error
