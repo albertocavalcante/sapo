@@ -33,9 +33,7 @@ def extract_archive(archive_path: Path, extract_to: Path) -> bool:
                     tar.extractall(path=extract_to)
                     return True
                 except (OSError, PermissionError) as e:
-                    console.print(
-                        f"[bold red]Error extracting archive: {str(e)}[/]"
-                    )
+                    console.print(f"[bold red]Error extracting archive: {str(e)}[/]")
                     return False
         elif archive_path.suffix == ".zip":
             with zipfile.ZipFile(archive_path, "r") as zip_ref:
@@ -43,20 +41,21 @@ def extract_archive(archive_path: Path, extract_to: Path) -> bool:
                     # On Windows, we need to handle paths differently
                     for member in zip_ref.namelist():
                         # Skip directory entries
-                        if member.endswith('/'):
+                        if member.endswith("/"):
                             continue
                         # Get the target path
                         target_path = extract_to / member
                         # Create parent directories if they don't exist
                         target_path.parent.mkdir(parents=True, exist_ok=True)
                         # Extract the file
-                        with zip_ref.open(member) as source, open(target_path, 'wb') as target:
+                        with (
+                            zip_ref.open(member) as source,
+                            open(target_path, "wb") as target,
+                        ):
                             shutil.copyfileobj(source, target)
                     return True
                 except (OSError, PermissionError) as e:
-                    console.print(
-                        f"[bold red]Error extracting archive: {str(e)}[/]"
-                    )
+                    console.print(f"[bold red]Error extracting archive: {str(e)}[/]")
                     return False
         else:
             console.print(
@@ -65,12 +64,8 @@ def extract_archive(archive_path: Path, extract_to: Path) -> bool:
             return False
 
     except (OSError, PermissionError) as e:
-        console.print(
-            f"[bold red]Error accessing archive: {str(e)}[/]"
-        )
+        console.print(f"[bold red]Error accessing archive: {str(e)}[/]")
         return False
     except (tarfile.TarError, zipfile.BadZipFile) as e:
-        console.print(
-            f"[bold red]Error reading archive: {str(e)}[/]"
-        )
+        console.print(f"[bold red]Error reading archive: {str(e)}[/]")
         return False

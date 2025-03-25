@@ -53,7 +53,7 @@ def download_file(url: str, local_path: Path, timeout: int = 30) -> bool:
             with ProgressTracker(
                 f"Downloading {local_path.name}", total_size
             ) as progress:
-                with open(temp_path, 'wb') as f:
+                with open(temp_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:  # filter out keep-alive new chunks
                             f.write(chunk)
@@ -64,9 +64,7 @@ def download_file(url: str, local_path: Path, timeout: int = 30) -> bool:
             temp_path.rename(local_path)
             return True
         except (OSError, PermissionError) as e:
-            console.print(
-                f"[bold red]Error moving file to {local_path}: {str(e)}[/]"
-            )
+            console.print(f"[bold red]Error moving file to {local_path}: {str(e)}[/]")
             return False
 
     except requests.exceptions.RequestException as e:
