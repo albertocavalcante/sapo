@@ -145,10 +145,11 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
-      - name: Run security checks
-        run: |
-          poetry run bandit -r sapo
-          poetry run safety scan
+      - name: Run Bandit security checks
+        run: poetry run bandit -r sapo
+
+      - name: Run Safety dependency checks
+        run: poetry run safety --key ${{ secrets.SAFETY_API_KEY }} --stage cicd scan
 
   build:
     name: Build
