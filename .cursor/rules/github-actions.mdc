@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# GitHub Actions
+
+## Actions Versions
+
+- For third-party actions, always pin the version to a commit hash (it's ok to put the version as a comment after the hash for readability)

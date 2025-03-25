@@ -1,0 +1,37 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Python
+
+# Package manager
+
+- This project uses Poetry >=2.0.0, keep that in mind
+- ALWAYS prefer `pipx` instead of `pip` when needed to run or write documentation
+
+## Version
+
+- Use Python 3.13 or above ONLY
+
+## Types
+
+- ALWAYS use type hints and type annotations
+
+## Tests
+
+- ALWAYS write unit tests
+- Write code in a a way it can be tested, refactor if needed
+- ALWAYS run unittests and confirm they're passing e.g. `poetry run pytest`
+
+## Dependencies
+
+- Pydantic is the preferred library for data model and validation
+
+## Dev Dependencies and Tools
+
+- Do not use `black`
+- Linter: use `ruff`
+- Formatter: use `ruff`
+- Prefer tools configuration inside [pyproject.toml](mdc:pyproject.toml)
+- Always make sure linter settings and .editorconfig are in sync
