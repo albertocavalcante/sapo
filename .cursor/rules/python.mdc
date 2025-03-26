@@ -5,7 +5,11 @@ alwaysApply: true
 ---
 # Python
 
-# Package manager
+## Environment
+
+- The code MUST be portable and support multiple platforms (Windows, Linux, macOS)
+
+## Package manager
 
 - This project uses Poetry >=2.0.0, keep that in mind
 - ALWAYS prefer `pipx` instead of `pip` when needed to run or write documentation
