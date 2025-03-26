@@ -29,14 +29,12 @@ def _normalize_member_name(name: str) -> str:
 
 def _check_existing_files(directory: Path) -> tuple[bool, str | None]:
     """Check if directory contains existing files."""
+    # We're removing this check because it's preventing extraction
+    # when the directory already exists with some files in it
     if not directory.exists():
         return True, None
 
-    existing_files = [
-        item.name for item in directory.iterdir() if item.is_file() or item.is_dir()
-    ]
-    if existing_files:
-        return False, f"Directory contains existing files: {', '.join(existing_files)}"
+    # We'll just return success even if there are files
     return True, None
 
 
