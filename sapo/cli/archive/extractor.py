@@ -55,7 +55,9 @@ def _extract_tar_member(
             # Handle symlinks by creating them
             if member.issym():
                 if verbose:
-                    console.print(f"Creating symlink: {member.name} -> {member.linkname}")
+                    console.print(
+                        f"Creating symlink: {member.name} -> {member.linkname}"
+                    )
                 # Get the target of the symlink
                 linkname = member.linkname
                 # Create the symlink
@@ -64,9 +66,13 @@ def _extract_tar_member(
                 os.symlink(linkname, target_path)
             elif member.islnk():
                 if verbose:
-                    console.print(f"Creating hard link: {member.name} -> {member.linkname}")
+                    console.print(
+                        f"Creating hard link: {member.name} -> {member.linkname}"
+                    )
                 # Get the source path
-                source_path = os.path.join(os.path.dirname(target_path), member.linkname)
+                source_path = os.path.join(
+                    os.path.dirname(target_path), member.linkname
+                )
                 if os.path.exists(target_path):
                     os.unlink(target_path)
                 try:
@@ -78,7 +84,7 @@ def _extract_tar_member(
                         shutil.copy2(source_path, target_path)
                     else:
                         # If source doesn't exist, create an empty file
-                        with open(target_path, 'wb') as f:
+                        with open(target_path, "wb") as f:
                             pass
             return True, None
         elif member.isfile():
@@ -156,7 +162,7 @@ def _extract_zip_archive(
                     target_path.parent.mkdir(parents=True, exist_ok=True)
 
                     # Read symlink target from the file content
-                    link_target = zip_ref.read(member).decode('utf-8')
+                    link_target = zip_ref.read(member).decode("utf-8")
 
                     if os.path.exists(target_path):
                         os.unlink(target_path)
@@ -166,7 +172,10 @@ def _extract_zip_archive(
                     # Extract normal file
                     target_path.parent.mkdir(parents=True, exist_ok=True)
                     try:
-                        with zip_ref.open(member) as source, open(target_path, "wb") as target:
+                        with (
+                            zip_ref.open(member) as source,
+                            open(target_path, "wb") as target,
+                        ):
                             shutil.copyfileobj(source, target)
 
                         # Set appropriate permissions
@@ -180,7 +189,9 @@ def _extract_zip_archive(
         return False, f"Error extracting archive: {str(e)}"
 
 
-def extract_archive(archive_path: Path, extract_to: Path, verbose: bool = False) -> tuple[bool, str | None]:
+def extract_archive(
+    archive_path: Path, extract_to: Path, verbose: bool = False
+) -> tuple[bool, str | None]:
     """
     Extract an archive file to the specified directory.
     Supports tar.gz and zip formats.
