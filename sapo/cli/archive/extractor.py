@@ -84,7 +84,7 @@ def _extract_tar_member(
                         shutil.copy2(source_path, target_path)
                     else:
                         # If source doesn't exist, create an empty file
-                        with open(target_path, "wb") as f:
+                        with open(target_path, "wb"):
                             pass
             return True, None
         elif member.isfile():
