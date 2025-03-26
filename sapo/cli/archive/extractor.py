@@ -15,10 +15,9 @@ def _validate_tar_member(member: tarfile.TarInfo) -> tuple[bool, str | None]:
     """Validate a tar archive member for security."""
     if member.name.startswith("..") or member.name.startswith("/"):
         return False, "Invalid archive member path detected"
-    if member.issym() or member.islnk():
-        return False, "Archive contains symlinks which are not allowed"
     if member.isdev():
         return False, "Archive contains device files which are not allowed"
+    # Allow symlinks but don't extract them - they'll be skipped during extraction
     return True, None
 
 
@@ -46,6 +45,12 @@ def _extract_tar_member(
     """Extract a single tar archive member."""
     try:
         target_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Skip symlinks and links
+        if member.issym() or member.islnk():
+            console.print(f"[yellow]Skipping symlink or link: {member.name}[/yellow]")
+            return True, None
+
         if member.isfile():
             with tar.extractfile(member) as source, open(target_path, "wb") as target:
                 shutil.copyfileobj(source, target)
@@ -54,21 +59,6 @@ def _extract_tar_member(
         return True, None
     except (OSError, PermissionError) as e:
         return False, f"Error extracting {member.name}: {str(e)}"
-
-
-def _extract_zip_member(
-    zip_ref: zipfile.ZipFile,
-    member: str,
-    target_path: Path,
-) -> tuple[bool, str | None]:
-    """Extract a single zip archive member."""
-    try:
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        with zip_ref.open(member) as source, open(target_path, "wb") as target:
-            shutil.copyfileobj(source, target)
-        return True, None
-    except (OSError, PermissionError) as e:
-        return False, f"Error extracting {member}: {str(e)}"
 
 
 def _extract_tar_archive(
@@ -101,13 +91,43 @@ def _extract_zip_archive(
     """Extract a zip archive."""
     try:
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
+            # First, validate and check for potential security issues
             for member in zip_ref.namelist():
-                if member.endswith("/"):  # Skip directory entries
+                # Skip directory entries
+                if member.endswith("/"):
                     continue
+
+                # Check for path traversal attempts
+                if member.startswith("..") or member.startswith("/") or ".." in member:
+                    console.print(
+                        f"[yellow]Skipping potentially unsafe path: {member}[/yellow]"
+                    )
+                    continue
+
+                # Get file info
+                info = zip_ref.getinfo(member)
+
+                # Skip potential symlinks (check external attributes)
+                # 0xA000000 is the mask for symbolic links in Unix
+                if info.external_attr >> 16 == 0o120000:
+                    console.print(
+                        f"[yellow]Skipping potential symlink: {member}[/yellow]"
+                    )
+                    continue
+
                 target_path = extract_to / member
-                success, error = _extract_zip_member(zip_ref, member, target_path)
-                if not success:
-                    return False, error
+
+                # Extract the file
+                try:
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    with (
+                        zip_ref.open(member) as source,
+                        open(target_path, "wb") as target,
+                    ):
+                        shutil.copyfileobj(source, target)
+                except (OSError, PermissionError) as e:
+                    return False, f"Error extracting {member}: {str(e)}"
+
             return True, None
     except (OSError, PermissionError) as e:
         return False, f"Error extracting archive: {str(e)}"

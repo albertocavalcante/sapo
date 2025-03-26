@@ -147,7 +147,9 @@ def install_artifactory(
     show_info(config)
 
     # Confirm installation unless in non-interactive mode
-    if not non_interactive and not typer.confirm("Do you want to proceed with the installation?"):
+    if not non_interactive and not typer.confirm(
+        "Do you want to proceed with the installation?"
+    ):
         raise typer.Exit()
 
     # Download package
@@ -168,7 +170,9 @@ def install_artifactory(
 
     # Extract archive
     console.print("\nExtracting archive...")
-    extraction_success, extraction_error = extract_archive(config.download_path, config.extract_path)
+    extraction_success, extraction_error = extract_archive(
+        config.download_path, config.extract_path
+    )
     if not extraction_success:
         console.print(f"[red]Failed to extract archive: {extraction_error}[/red]")
         raise typer.Exit(1)
@@ -184,7 +188,9 @@ def install_artifactory(
                     file_count += 1
                 elif item.is_dir():
                     dir_count += 1
-            console.print(f"Extract path contains {file_count} files and {dir_count} directories.")
+            console.print(
+                f"Extract path contains {file_count} files and {dir_count} directories."
+            )
         else:
             console.print("[red]Extract path does not exist![/red]")
     except Exception as e:
