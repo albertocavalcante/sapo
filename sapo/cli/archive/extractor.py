@@ -5,6 +5,7 @@ import zipfile
 import shutil
 from pathlib import Path
 import os
+import stat
 
 from rich.console import Console
 
@@ -17,7 +18,7 @@ def _validate_tar_member(member: tarfile.TarInfo) -> tuple[bool, str | None]:
         return False, "Invalid archive member path detected"
     if member.isdev():
         return False, "Archive contains device files which are not allowed"
-    # Allow symlinks but don't extract them - they'll be skipped during extraction
+    # Allow all files including symlinks
     return True, None
 
 
@@ -41,28 +42,67 @@ def _extract_tar_member(
     tar: tarfile.TarFile,
     member: tarfile.TarInfo,
     target_path: Path,
+    verbose: bool = False,
 ) -> tuple[bool, str | None]:
     """Extract a single tar archive member."""
     try:
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Skip symlinks and links
-        if member.issym() or member.islnk():
-            console.print(f"[yellow]Skipping symlink or link: {member.name}[/yellow]")
-            return True, None
+        if verbose:
+            console.print(f"Extracting: {member.name}")
 
-        if member.isfile():
+        if member.issym() or member.islnk():
+            # Handle symlinks by creating them
+            if member.issym():
+                if verbose:
+                    console.print(
+                        f"Creating symlink: {member.name} -> {member.linkname}"
+                    )
+                # Get the target of the symlink
+                linkname = member.linkname
+                # Create the symlink
+                if os.path.exists(target_path):
+                    os.unlink(target_path)
+                os.symlink(linkname, target_path)
+            elif member.islnk():
+                if verbose:
+                    console.print(
+                        f"Creating hard link: {member.name} -> {member.linkname}"
+                    )
+                # Get the source path
+                source_path = os.path.join(
+                    os.path.dirname(target_path), member.linkname
+                )
+                if os.path.exists(target_path):
+                    os.unlink(target_path)
+                try:
+                    # Try to create a hard link
+                    os.link(source_path, target_path)
+                except (OSError, PermissionError):
+                    # Fall back to copying if hard link fails
+                    if os.path.exists(source_path):
+                        shutil.copy2(source_path, target_path)
+                    else:
+                        # If source doesn't exist, create an empty file
+                        with open(target_path, "wb"):
+                            pass
+            return True, None
+        elif member.isfile():
             with tar.extractfile(member) as source, open(target_path, "wb") as target:
                 shutil.copyfileobj(source, target)
+            # Set the file permissions
+            os.chmod(target_path, member.mode)
         elif member.isdir():
             target_path.mkdir(parents=True, exist_ok=True)
+            # Set the directory permissions
+            os.chmod(target_path, member.mode)
         return True, None
     except (OSError, PermissionError) as e:
         return False, f"Error extracting {member.name}: {str(e)}"
 
 
 def _extract_tar_archive(
-    archive_path: Path, extract_to: Path
+    archive_path: Path, extract_to: Path, verbose: bool = False
 ) -> tuple[bool, str | None]:
     """Extract a tar.gz archive."""
     try:
@@ -77,7 +117,7 @@ def _extract_tar_archive(
             # Extract members after validation
             for member in tar.getmembers():
                 target_path = extract_to / member.name
-                success, error = _extract_tar_member(tar, member, target_path)
+                success, error = _extract_tar_member(tar, member, target_path, verbose)
                 if not success:
                     return False, error
             return True, None
@@ -86,12 +126,12 @@ def _extract_tar_archive(
 
 
 def _extract_zip_archive(
-    archive_path: Path, extract_to: Path
+    archive_path: Path, extract_to: Path, verbose: bool = False
 ) -> tuple[bool, str | None]:
     """Extract a zip archive."""
     try:
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
-            # First, validate and check for potential security issues
+            # First process and check for potential security issues
             for member in zip_ref.namelist():
                 # Skip directory entries
                 if member.endswith("/"):
@@ -104,36 +144,54 @@ def _extract_zip_archive(
                     )
                     continue
 
+                if verbose:
+                    console.print(f"Extracting: {member}")
+
                 # Get file info
                 info = zip_ref.getinfo(member)
-
-                # Skip potential symlinks (check external attributes)
-                # 0xA000000 is the mask for symbolic links in Unix
-                if info.external_attr >> 16 == 0o120000:
-                    console.print(
-                        f"[yellow]Skipping potential symlink: {member}[/yellow]"
-                    )
-                    continue
-
                 target_path = extract_to / member
 
-                # Extract the file
-                try:
+                # Check if it's a symlink (external_attr has the Unix file type)
+                is_symlink = (info.external_attr >> 16) & stat.S_IFLNK == stat.S_IFLNK
+
+                if is_symlink:
+                    # Extract the symlink
+                    if verbose:
+                        console.print(f"Extracting symlink: {member}")
+
                     target_path.parent.mkdir(parents=True, exist_ok=True)
-                    with (
-                        zip_ref.open(member) as source,
-                        open(target_path, "wb") as target,
-                    ):
-                        shutil.copyfileobj(source, target)
-                except (OSError, PermissionError) as e:
-                    return False, f"Error extracting {member}: {str(e)}"
+
+                    # Read symlink target from the file content
+                    link_target = zip_ref.read(member).decode("utf-8")
+
+                    if os.path.exists(target_path):
+                        os.unlink(target_path)
+
+                    os.symlink(link_target, target_path)
+                else:
+                    # Extract normal file
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        with (
+                            zip_ref.open(member) as source,
+                            open(target_path, "wb") as target,
+                        ):
+                            shutil.copyfileobj(source, target)
+
+                        # Set appropriate permissions
+                        if info.external_attr > 0:
+                            os.chmod(target_path, (info.external_attr >> 16) & 0o777)
+                    except (OSError, PermissionError) as e:
+                        return False, f"Error extracting {member}: {str(e)}"
 
             return True, None
     except (OSError, PermissionError) as e:
         return False, f"Error extracting archive: {str(e)}"
 
 
-def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | None]:
+def extract_archive(
+    archive_path: Path, extract_to: Path, verbose: bool = False
+) -> tuple[bool, str | None]:
     """
     Extract an archive file to the specified directory.
     Supports tar.gz and zip formats.
@@ -141,6 +199,7 @@ def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | N
     Args:
         archive_path: Path to the archive file
         extract_to: Directory to extract to
+        verbose: Whether to print detailed extraction information
 
     Returns:
         tuple[bool, str | None]: A tuple containing:
@@ -161,9 +220,9 @@ def extract_archive(archive_path: Path, extract_to: Path) -> tuple[bool, str | N
 
         # Extract based on file type
         if archive_path.name.endswith((".tar.gz", ".tgz")):
-            return _extract_tar_archive(archive_path, extract_to)
+            return _extract_tar_archive(archive_path, extract_to, verbose)
         elif archive_path.suffix == ".zip":
-            return _extract_zip_archive(archive_path, extract_to)
+            return _extract_zip_archive(archive_path, extract_to, verbose)
         else:
             return False, f"Unsupported archive format: {archive_path.suffix}"
 

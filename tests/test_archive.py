@@ -55,12 +55,38 @@ def test_extract_tar(tmp_path):
     assert (extract_to / "test_dir" / "subfile.txt").read_text() == "sub content"
 
 
+def test_extract_tar_verbose(tmp_path):
+    """Test extracting a tar.gz archive with verbose output."""
+    archive_path = create_test_tar(tmp_path)
+    extract_to = tmp_path / "extract"
+
+    success, error = extract_archive(archive_path, extract_to, verbose=True)
+    assert success, error
+    assert (extract_to / "test.txt").exists()
+    assert (extract_to / "test.txt").read_text() == "test content"
+    assert (extract_to / "test_dir" / "subfile.txt").exists()
+    assert (extract_to / "test_dir" / "subfile.txt").read_text() == "sub content"
+
+
 def test_extract_zip(tmp_path):
     """Test extracting a zip archive."""
     archive_path = create_test_zip(tmp_path)
     extract_to = tmp_path / "extract"
 
     success, error = extract_archive(archive_path, extract_to)
+    assert success, error
+    assert (extract_to / "test.txt").exists()
+    assert (extract_to / "test.txt").read_text() == "test content"
+    assert (extract_to / "test_dir" / "subfile.txt").exists()
+    assert (extract_to / "test_dir" / "subfile.txt").read_text() == "sub content"
+
+
+def test_extract_zip_verbose(tmp_path):
+    """Test extracting a zip archive with verbose output."""
+    archive_path = create_test_zip(tmp_path)
+    extract_to = tmp_path / "extract"
+
+    success, error = extract_archive(archive_path, extract_to, verbose=True)
     assert success, error
     assert (extract_to / "test.txt").exists()
     assert (extract_to / "test.txt").read_text() == "test content"
