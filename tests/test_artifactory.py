@@ -129,7 +129,7 @@ def test_install_artifactory_success(
 
     # Mock successful operations
     mock_download.return_value = True
-    mock_extract.return_value = True
+    mock_extract.return_value = (True, None)
     mock_verify_checksum.return_value = True
 
     # Run installation
@@ -260,3 +260,58 @@ def test_get_default_dest_dir_linux():
     with patch("pathlib.Path.home", return_value=Path("/home/user")):
         path = get_default_dest_dir(Platform.LINUX)
         assert path == Path("/home/user/dev/tools")
+
+
+@patch("sapo.cli.artifactory.download_file")
+@patch("sapo.cli.artifactory.extract_archive")
+@patch("sapo.cli.artifactory.verify_checksum")
+@patch("sapo.cli.artifactory.setup_signal_handlers")
+@patch("sapo.cli.artifactory.register_temp_file")
+def test_install_artifactory_non_interactive(
+    mock_register_temp,
+    mock_setup_signals,
+    mock_verify_checksum,
+    mock_extract,
+    mock_download,
+    tmp_path,
+):
+    """Test non-interactive Artifactory installation."""
+    # Mock successful operations
+    mock_download.return_value = True
+    mock_extract.return_value = (True, None)
+    mock_verify_checksum.return_value = True
+
+    # Run installation in non-interactive mode
+    install_artifactory(
+        version="7.98.17",
+        platform=Platform.DARWIN,
+        destination=tmp_path,
+        verify_checksum_enabled=True,
+        non_interactive=True,
+    )
+
+    # Verify all expected functions were called but not user confirmation
+    mock_setup_signals.assert_called_once()
+    mock_download.assert_called_once()
+    mock_verify_checksum.assert_called_once()
+    mock_extract.assert_called_once()
+    mock_register_temp.assert_called_once()
+
+
+@patch("typer.confirm")
+@patch("sapo.cli.artifactory.download_file")
+@patch("sapo.cli.artifactory.extract_archive")
+def test_install_artifactory_extract_failed(
+    mock_extract, mock_download, mock_confirm, tmp_path
+):
+    """Test Artifactory installation with extraction failure."""
+    mock_confirm.return_value = True
+    mock_download.return_value = True
+    mock_extract.return_value = (False, "Extraction error message")
+
+    with pytest.raises(typer.Exit):
+        install_artifactory(
+            version="7.98.17",
+            platform=Platform.DARWIN,
+            destination=tmp_path,
+        )

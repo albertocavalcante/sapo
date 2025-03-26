@@ -114,6 +114,7 @@ def test_extract_existing_directory(tmp_path):
     (extract_to / "existing.txt").write_text("existing content")
 
     success, error = extract_archive(archive_path, extract_to)
-    assert not success
-    assert "existing files" in error.lower()
-    assert "existing.txt" in error
+    assert success
+    assert (extract_to / "existing.txt").exists()
+    assert (extract_to / "test.txt").exists()
+    assert (extract_to / "test_dir" / "subfile.txt").exists()

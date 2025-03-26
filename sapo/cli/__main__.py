@@ -36,6 +36,9 @@ def install(
     keep_archive: bool = typer.Option(
         False, "--keep", "-k", help="Keep the downloaded archive after extraction"
     ),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Non-interactive mode, skip confirmation prompts"
+    ),
 ) -> None:
     """
     Download and install JFrog Artifactory OSS.
@@ -45,6 +48,7 @@ def install(
         platform=platform,
         destination=destination,
         keep_archive=keep_archive,
+        non_interactive=yes,
     )
 
 

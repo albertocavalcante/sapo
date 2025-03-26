@@ -119,6 +119,7 @@ def install_artifactory(
     destination: Optional[Path] = None,
     keep_archive: bool = False,
     verify_checksum_enabled: bool = True,
+    non_interactive: bool = False,
 ) -> None:
     """Install Artifactory OSS.
 
@@ -128,6 +129,7 @@ def install_artifactory(
         destination: Installation directory
         keep_archive: Whether to keep downloaded archive
         verify_checksum_enabled: Whether to verify package checksum
+        non_interactive: Skip confirmation prompts if True
     """
     # Setup signal handlers
     setup_signal_handlers()
@@ -144,8 +146,10 @@ def install_artifactory(
     # Show installation info
     show_info(config)
 
-    # Confirm installation
-    if not typer.confirm("Do you want to proceed with the installation?"):
+    # Confirm installation unless in non-interactive mode
+    if not non_interactive and not typer.confirm(
+        "Do you want to proceed with the installation?"
+    ):
         raise typer.Exit()
 
     # Download package
@@ -166,9 +170,31 @@ def install_artifactory(
 
     # Extract archive
     console.print("\nExtracting archive...")
-    if not extract_archive(config.download_path, config.extract_path):
-        console.print("[red]Failed to extract archive[/red]")
+    extraction_success, extraction_error = extract_archive(
+        config.download_path, config.extract_path
+    )
+    if not extraction_success:
+        console.print(f"[red]Failed to extract archive: {extraction_error}[/red]")
         raise typer.Exit(1)
+
+    # Debug: Check if extract path exists and has files
+    try:
+        console.print(f"\nChecking extract path: {config.extract_path}")
+        if config.extract_path.exists():
+            file_count = 0
+            dir_count = 0
+            for item in config.extract_path.iterdir():
+                if item.is_file():
+                    file_count += 1
+                elif item.is_dir():
+                    dir_count += 1
+            console.print(
+                f"Extract path contains {file_count} files and {dir_count} directories."
+            )
+        else:
+            console.print("[red]Extract path does not exist![/red]")
+    except Exception as e:
+        console.print(f"[yellow]Error checking extract path: {str(e)}[/yellow]")
 
     # Clean up if requested
     if not config.keep_archive:
