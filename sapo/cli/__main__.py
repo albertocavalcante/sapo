@@ -39,6 +39,9 @@ def install(
     yes: bool = typer.Option(
         False, "--yes", "-y", help="Non-interactive mode, skip confirmation prompts"
     ),
+    verbose: bool = typer.Option(
+        False, "--verbose", help="Show verbose extraction logs"
+    ),
 ) -> None:
     """
     Download and install JFrog Artifactory OSS.
@@ -49,6 +52,7 @@ def install(
         destination=destination,
         keep_archive=keep_archive,
         non_interactive=yes,
+        verbose=verbose,
     )
 
 

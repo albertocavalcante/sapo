@@ -37,6 +37,7 @@ def test_artifactory_config():
         dest_dir=Path("/tmp"),
         keep_archive=True,
         verify_checksum=False,
+        verbose=True,
     )
 
     assert config.version == "1.0.0"
@@ -44,6 +45,7 @@ def test_artifactory_config():
     assert config.dest_dir == Path("/tmp")
     assert config.keep_archive is True
     assert config.verify_checksum is False
+    assert config.verbose is True
     assert (
         config.base_url
         == "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss"
@@ -138,6 +140,7 @@ def test_install_artifactory_success(
         platform=Platform.DARWIN,
         destination=tmp_path,
         verify_checksum_enabled=True,
+        verbose=False,
     )
 
     # Verify all expected functions were called
@@ -288,6 +291,7 @@ def test_install_artifactory_non_interactive(
         destination=tmp_path,
         verify_checksum_enabled=True,
         non_interactive=True,
+        verbose=True,
     )
 
     # Verify all expected functions were called but not user confirmation

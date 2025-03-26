@@ -60,6 +60,7 @@ class ArtifactoryConfig:
         dest_dir: Optional[Path] = None,
         keep_archive: bool = False,
         verify_checksum: bool = True,
+        verbose: bool = False,
     ):
         """
         Initialize Artifactory configuration.
@@ -70,6 +71,7 @@ class ArtifactoryConfig:
             dest_dir: Destination directory
             keep_archive: Whether to keep the downloaded archive
             verify_checksum: Whether to verify the downloaded file's checksum
+            verbose: Whether to show verbose output
 
         Raises:
             ValueError: If version is invalid or empty
@@ -90,6 +92,7 @@ class ArtifactoryConfig:
         self.dest_dir = dest_dir or get_default_dest_dir(self.platform)
         self.keep_archive = keep_archive
         self.verify_checksum = verify_checksum
+        self.verbose = verbose
         self.base_url = "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss"
 
     @property
@@ -120,6 +123,7 @@ def install_artifactory(
     keep_archive: bool = False,
     verify_checksum_enabled: bool = True,
     non_interactive: bool = False,
+    verbose: bool = False,
 ) -> None:
     """Install Artifactory OSS.
 
@@ -130,6 +134,7 @@ def install_artifactory(
         keep_archive: Whether to keep downloaded archive
         verify_checksum_enabled: Whether to verify package checksum
         non_interactive: Skip confirmation prompts if True
+        verbose: Whether to show verbose extraction logs
     """
     # Setup signal handlers
     setup_signal_handlers()
@@ -141,6 +146,7 @@ def install_artifactory(
         dest_dir=destination,
         keep_archive=keep_archive,
         verify_checksum=verify_checksum_enabled,
+        verbose=verbose,
     )
 
     # Show installation info
@@ -171,7 +177,7 @@ def install_artifactory(
     # Extract archive
     console.print("\nExtracting archive...")
     extraction_success, extraction_error = extract_archive(
-        config.download_path, config.extract_path
+        config.download_path, config.extract_path, verbose=config.verbose
     )
     if not extraction_success:
         console.print(f"[red]Failed to extract archive: {extraction_error}[/red]")
