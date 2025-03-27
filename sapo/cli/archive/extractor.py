@@ -107,15 +107,42 @@ def _extract_tar_archive(
     """Extract a tar.gz archive."""
     try:
         with tarfile.open(archive_path, "r:gz") as tar:
+            # Get all members and find the common prefix
+            members = tar.getmembers()
+            if not members:
+                return False, "Archive is empty"
+
+            # Find the common prefix (top-level directory) if it exists
+            common_prefix = None
+            first_member_prefix = members[0].name.split("/")[0]
+            # Check if all members share this prefix
+            if all(
+                member.name == first_member_prefix
+                or member.name.startswith(first_member_prefix + "/")
+                for member in members
+            ):
+                common_prefix = first_member_prefix
+                # If all files are under this prefix, extract directly to target directory
+                for member in members:
+                    # Skip the root directory itself
+                    if member.name == common_prefix:
+                        continue
+                    # Remove the common prefix from the member name
+                    member.name = (
+                        member.name[len(common_prefix) + 1 :]
+                        if member.name.startswith(common_prefix + "/")
+                        else member.name
+                    )
+
             # Validate all members first
-            for member in tar.getmembers():
+            for member in members:
                 is_valid, error = _validate_tar_member(member)
                 if not is_valid:
                     return False, error
                 member.name = _normalize_member_name(member.name)
 
             # Extract members after validation
-            for member in tar.getmembers():
+            for member in members:
                 target_path = extract_to / member.name
                 success, error = _extract_tar_member(tar, member, target_path, verbose)
                 if not success:

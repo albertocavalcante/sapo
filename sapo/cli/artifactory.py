@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Optional
+import os
 
 import requests
 from pydantic import BaseModel, ConfigDict
@@ -44,6 +45,11 @@ def get_default_dest_dir(platform: Platform) -> Path:
     Returns:
         Path: The default destination directory
     """
+    # Check for environment variable first
+    if "SAPO_INSTALL_DIR" in os.environ:
+        return Path(os.environ["SAPO_INSTALL_DIR"])
+
+    # Fall back to platform-specific defaults
     home = Path.home()
     if platform == Platform.WINDOWS:
         return home / "AppData" / "Local" / "Programs" / "Artifactory"
