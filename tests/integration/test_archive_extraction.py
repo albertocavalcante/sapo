@@ -2,7 +2,6 @@
 
 import os
 import shutil
-from pathlib import Path
 import pytest
 from subprocess import run
 
@@ -28,24 +27,45 @@ def test_install_artifactory(tmp_path):
 
         # Run the install command
         result = run(
-            ["poetry", "run", "python", "-m", "sapo.cli", "install", "-v", version, "-y", "--verbose"],
+            [
+                "poetry",
+                "run",
+                "python",
+                "-m",
+                "sapo.cli",
+                "install",
+                "-v",
+                version,
+                "-y",
+                "--verbose",
+            ],
             capture_output=True,
             text=True,
             env={**os.environ, "SAPO_INSTALL_DIR": str(tools_dir)},
         )
 
         # Check if installation was successful
-        assert result.returncode == 0, f"Installation failed for version {version}: {result.stderr}"
+        assert result.returncode == 0, (
+            f"Installation failed for version {version}: {result.stderr}"
+        )
 
         # Verify installation directory structure
         assert (install_dir / "app").exists(), f"app directory not found in {version}"
         assert (install_dir / "var").exists(), f"var directory not found in {version}"
-        assert (install_dir / "app" / "bin").exists(), f"bin directory not found in {version}"
-        assert (install_dir / "app" / "third-party").exists(), f"third-party directory not found in {version}"
+        assert (install_dir / "app" / "bin").exists(), (
+            f"bin directory not found in {version}"
+        )
+        assert (install_dir / "app" / "third-party").exists(), (
+            f"third-party directory not found in {version}"
+        )
 
         # Verify key files
-        assert (install_dir / "app" / "bin" / "artifactoryctl").exists(), f"artifactoryctl not found in {version}"
-        assert (install_dir / "app" / "artifactory.product.version.properties").exists(), f"version properties not found in {version}"
+        assert (install_dir / "app" / "bin" / "artifactoryctl").exists(), (
+            f"artifactoryctl not found in {version}"
+        )
+        assert (
+            install_dir / "app" / "artifactory.product.version.properties"
+        ).exists(), f"version properties not found in {version}"
 
         # Clean up
         shutil.rmtree(install_dir)
