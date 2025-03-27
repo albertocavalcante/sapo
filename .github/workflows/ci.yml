@@ -3,12 +3,15 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
+    paths-ignore: &paths_to_ignore
+      - "*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".bazelrc"
+      - ".editorconfig"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
+    paths-ignore: *paths_to_ignore
   workflow_dispatch:
 
 # Prevent redundant workflow runs
