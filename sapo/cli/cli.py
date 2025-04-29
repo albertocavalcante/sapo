@@ -66,12 +66,12 @@ def install(
 
 
 @app.command()
-def versions(
+def releases(
     limit: int = typer.Option(
         10, "--limit", "-l", help="Number of versions to show (default: 10)"
     ),
 ) -> None:
-    """List available Artifactory versions with size and timestamp information.
+    """List available Artifactory releases with size and timestamp information.
 
     Fetches and displays a list of available Artifactory versions,
     including file sizes and release dates.
