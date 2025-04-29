@@ -1,4 +1,8 @@
-"""Command definitions for the Sapo CLI."""
+"""Command definitions for the Sapo CLI.
+
+This module contains all command definitions for the Sapo CLI application,
+using the Typer framework to define the command structure and options.
+"""
 
 import asyncio
 from pathlib import Path
@@ -46,7 +50,11 @@ def install(
         False, "--verbose", help="Show verbose extraction logs"
     ),
 ) -> None:
-    """Download and install JFrog Artifactory OSS."""
+    """Download and install JFrog Artifactory OSS.
+
+    Downloads the specified Artifactory version, verifies its checksum,
+    and extracts it to the destination directory.
+    """
     install_artifactory(
         version=version,
         platform=platform,
@@ -63,7 +71,11 @@ def versions(
         10, "--limit", "-l", help="Number of versions to show (default: 10)"
     ),
 ) -> None:
-    """List available Artifactory versions with size and timestamp information."""
+    """List available Artifactory versions with size and timestamp information.
+
+    Fetches and displays a list of available Artifactory versions,
+    including file sizes and release dates.
+    """
     list_versions(limit=limit)
 
 
@@ -73,7 +85,11 @@ def info(
         "7.98.17", "--version", "-v", help="Artifactory version to check"
     ),
 ) -> None:
-    """Show information about the script and available URLs."""
+    """Show information about the script and available URLs.
+
+    Displays configuration information, download URLs, and other details
+    about the specified Artifactory version.
+    """
     config = ArtifactoryConfig(version=version)
     show_info(config)
 
@@ -85,5 +101,9 @@ def release_notes(
     ),
     debug: bool = typer.Option(False, "--debug", help="Enable debug output"),
 ) -> None:
-    """Get release notes for a specific Artifactory version."""
+    """Get release notes for a specific Artifactory version.
+
+    Fetches and displays release notes for the specified Artifactory version,
+    including fixed issues and other changes.
+    """
     asyncio.run(display_release_notes(version, debug))
