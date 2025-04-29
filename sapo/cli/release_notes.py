@@ -64,6 +64,76 @@ async def get_topics(
         return None
 
 
+async def _find_target_topic(
+    topics: List[Dict[str, Any]], version: str, debug: bool = False
+) -> Optional[Dict[str, Any]]:
+    """Find the topic that contains the specified version."""
+    debug_print(f"Looking for version {version} in topics", debug)
+    for topic in topics:
+        if str(version) in str(topic):
+            return topic
+    debug_print(f"No topic found for version {version}", debug)
+    return None
+
+
+async def _parse_release_content(
+    content: str, debug: bool = False
+) -> Optional[Dict[str, Any]]:
+    """Parse the HTML content of release notes."""
+    soup = BeautifulSoup(content, "html.parser")
+
+    # Extract release date
+    release_date = ""
+    date_p = soup.find("p", string=lambda s: s and "Released:" in s)
+    if date_p:
+        release_date = date_p.get_text().strip()
+
+    # Extract resolved issues table
+    issues_table = soup.find("table", class_="informaltable")
+    if not issues_table:
+        debug_print("No issues table found in content", debug)
+        return None
+
+    # Get headers and rows
+    headers = []
+    header_row = issues_table.find("tr")
+    if header_row:
+        headers = [th.get_text().strip() for th in header_row.find_all(["th"])]
+
+    rows = []
+    for row in issues_table.find_all("tr")[1:]:  # Skip header row
+        cells = [td.get_text().strip() for td in row.find_all(["td"])]
+        rows.append(cells)
+
+    # Group issues by severity
+    issues = []
+    for row in rows:
+        if len(row) >= 4:  # JIRA Issue, Component, Severity, Description
+            issues.append(
+                {
+                    "id": row[0],
+                    "component": row[1],
+                    "severity": row[2],
+                    "description": row[3],
+                }
+            )
+
+    severity_order = ["Critical", "High", "Medium", "Low"]
+    by_severity = {sev: [] for sev in severity_order}
+    for issue in issues:
+        sev = issue["severity"]
+        if sev in by_severity:
+            by_severity[sev].append(issue)
+
+    return {
+        "release_date": release_date,
+        "headers": headers,
+        "rows": rows,
+        "by_severity": by_severity,
+        "severity_order": severity_order,
+    }
+
+
 async def get_release_notes(
     version: str, debug: bool = False
 ) -> Optional[Dict[str, Any]]:
@@ -87,16 +157,8 @@ async def get_release_notes(
                 debug_print("Failed to get topics", debug)
                 return None
 
-            debug_print(f"Looking for version {version} in topics", debug)
-
-            target_topic = None
-            for topic in topics:
-                if str(version) in str(topic):
-                    target_topic = topic
-                    break
-
+            target_topic = await _find_target_topic(topics, version, debug)
             if not target_topic:
-                debug_print(f"No topic found for version {version}", debug)
                 return None
 
             content_url = (
@@ -111,62 +173,13 @@ async def get_release_notes(
 
                 content = await response.text()
 
-                # Parse the HTML content
-                soup = BeautifulSoup(content, "html.parser")
-
-                # Extract release date
-                release_date = ""
-                date_p = soup.find("p", string=lambda s: s and "Released:" in s)
-                if date_p:
-                    release_date = date_p.get_text().strip()
-
-                # Extract resolved issues table
-                issues_table = soup.find("table", class_="informaltable")
-                if not issues_table:
-                    debug_print("No issues table found in content", debug)
+                parsed_content = await _parse_release_content(content, debug)
+                if not parsed_content:
                     return None
 
-                # Get headers and rows
-                headers = []
-                header_row = issues_table.find("tr")
-                if header_row:
-                    headers = [
-                        th.get_text().strip() for th in header_row.find_all(["th"])
-                    ]
-
-                rows = []
-                for row in issues_table.find_all("tr")[1:]:  # Skip header row
-                    cells = [td.get_text().strip() for td in row.find_all(["td"])]
-                    rows.append(cells)
-
-                # Group issues by severity
-                issues = []
-                for row in rows:
-                    if len(row) >= 4:  # JIRA Issue, Component, Severity, Description
-                        issues.append(
-                            {
-                                "id": row[0],
-                                "component": row[1],
-                                "severity": row[2],
-                                "description": row[3],
-                            }
-                        )
-
-                severity_order = ["Critical", "High", "Medium", "Low"]
-                by_severity = {sev: [] for sev in severity_order}
-                for issue in issues:
-                    sev = issue["severity"]
-                    if sev in by_severity:
-                        by_severity[sev].append(issue)
-
-                return {
-                    "version": version,
-                    "release_date": release_date,
-                    "headers": headers,
-                    "rows": rows,
-                    "by_severity": by_severity,
-                    "severity_order": severity_order,
-                }
+                # Add version to the result
+                parsed_content["version"] = version
+                return parsed_content
 
     except Exception as e:
         debug_print(f"Error: {str(e)}", debug)

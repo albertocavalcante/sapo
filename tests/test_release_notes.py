@@ -8,6 +8,8 @@ from sapo.cli.release_notes import (
     get_topics,
     get_release_notes,
     debug_print,
+    _find_target_topic,
+    _parse_release_content,
 )
 
 # Mock data for testing
@@ -114,6 +116,36 @@ async def test_get_topics_failure(mock_session):
 
     result = await get_topics(mock_session, "/test/topics", debug=True)
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_find_target_topic():
+    """Test finding target topic."""
+    topics = [
+        {"id": "topic-1", "title": "Artifactory 7.104.14 Release Notes"},
+        {"id": "topic-2", "title": "Artifactory 7.104.15 Release Notes"},
+    ]
+
+    # Should find matching topic
+    result = await _find_target_topic(topics, "7.104.14", debug=True)
+    assert result == topics[0]
+
+    # Should return None for non-matching version
+    result = await _find_target_topic(topics, "7.999.999", debug=True)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_parse_release_content():
+    """Test parsing release content."""
+    content = MOCK_HTML_CONTENT
+
+    result = await _parse_release_content(content, debug=True)
+    assert result is not None
+    assert result["release_date"] == "Released: 27 March 2025"
+    assert len(result["rows"]) == 2
+    assert "Critical" in result["by_severity"]
+    assert len(result["by_severity"]["Critical"]) == 1
 
 
 @pytest.mark.asyncio
