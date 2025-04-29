@@ -58,7 +58,7 @@ testpaths = [
     "tests",
 ]
 python_files = ["test_*.py"]
-
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

@@ -19,13 +19,14 @@ import typer
 from docker.errors import DockerException, ImageNotFound
 from pydantic import BaseModel, Field
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress
 
 from ..common import Platform, check_docker_installed
 from ..console import SapoConsole
 from .common import OperationStatus
 from .docker.volume import VolumeManager, VolumeType
 from .templates import render_template_from_file
+from .docker.container import DockerContainerManager
 
 # Create a default console for module-level logging
 console = Console()
@@ -445,69 +446,12 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
 
             return False
 
-        # Wait for Artifactory to be ready
-        console.print("[bold yellow]Waiting for Artifactory to start...[/]")
+        # Use the container manager to wait for health
+        container_manager = DockerContainerManager(docker_compose_dir, console)
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]"),
-        ) as progress:
-            # Wait for services to be ready
-            attempts = 0
-            max_attempts = 60  # 5 minutes (5s * 60)
-            while attempts < max_attempts:
-                try:
-                    # Check if Artifactory container is running and healthy
-                    status = subprocess.run(
-                        ["docker", "compose", "ps", "-q", "artifactory"],
-                        cwd=docker_compose_dir,
-                        capture_output=True,
-                        text=True,
-                        check=True,
-                    )
-
-                    if status.stdout.strip():
-                        health = subprocess.run(
-                            [
-                                "docker",
-                                "inspect",
-                                "--format",
-                                "{{.State.Health.Status}}",
-                                status.stdout.strip(),
-                            ],
-                            capture_output=True,
-                            text=True,
-                        )
-
-                        if health.stdout.strip() == "healthy":
-                            progress.update(
-                                description="[bold green]Artifactory is now running![/]"
-                            )
-                            break
-
-                    # Update status message
-                    attempts += 1
-                    message = (
-                        f"Starting Artifactory services... ({attempts}/{max_attempts})"
-                    )
-                    progress.update(description=message)
-
-                    # Wait before next check
-                    time.sleep(5)
-
-                except subprocess.SubprocessError as e:
-                    if debug:
-                        console.print(f"[red]Error checking service status: {e}[/]")
-                    progress.update(
-                        description="[bold red]Error checking service status...[/]"
-                    )
-                    return False
-
-            if attempts >= max_attempts:
-                progress.update(
-                    description="[bold red]Timeout waiting for Artifactory to start[/]"
-                )
-                return False
+        # Wait for containers to be healthy
+        if not await container_manager.wait_for_health(debug=debug):
+            return False
 
         # Get the port number
         try:
@@ -1078,19 +1022,28 @@ def install_docker_sync(
     Returns:
         OperationStatus: Status of the operation
     """
-    return asyncio.run(
-        install_docker(
-            version=version,
-            platform=platform,
-            destination=destination,
-            port=port,
-            start=start,
-            non_interactive=non_interactive,
-            verbose=verbose,
-            debug=debug,
-            use_named_volumes=use_named_volumes,
-            volume_driver=volume_driver,
-            volume_sizes=volume_sizes,
-            host_paths=host_paths,
+    try:
+        result = asyncio.run(
+            install_docker(
+                version=version,
+                platform=platform,
+                destination=destination,
+                port=port,
+                start=start,
+                non_interactive=non_interactive,
+                verbose=verbose,
+                debug=debug,
+                use_named_volumes=use_named_volumes,
+                volume_driver=volume_driver,
+                volume_sizes=volume_sizes,
+                host_paths=host_paths,
+            )
         )
-    )
+        # Convert OperationStatus to boolean for the test
+        return result == OperationStatus.SUCCESS
+    except typer.Exit:
+        # Return False for any typer.Exit exceptions with non-zero exit codes
+        return False
+    except Exception:
+        # Any other exception is considered a failure
+        return False

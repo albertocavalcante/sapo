@@ -173,13 +173,14 @@ async def test_run_docker_compose(mock_run, mock_popen, mock_sleep, temp_data_di
     version_check.returncode = 0
     mock_run.return_value = version_check
 
-    # Configure process mocks for status check
-    mock_run.side_effect = [
-        version_check,  # docker --version
-        mock.MagicMock(stdout="container_id", returncode=0),  # ps command
-        mock.MagicMock(stdout="healthy", returncode=0),  # inspect command
-        mock.MagicMock(stdout="0.0.0.0:8082", returncode=0),  # port command
-    ]
+    # Create a DockerContainerManager and mock its wait_for_health method
+    with mock.patch(
+        "sapo.cli.install_mode.docker.DockerContainerManager"
+    ) as mock_manager_cls:
+        # Setup manager instance with mocked methods
+        mock_manager = mock.MagicMock()
+        mock_manager.wait_for_health = mock.AsyncMock(return_value=True)
+        mock_manager_cls.return_value = mock_manager
 
     # Configure mock for docker compose up
     process_mock = mock.MagicMock()
@@ -193,7 +194,11 @@ async def test_run_docker_compose(mock_run, mock_popen, mock_sleep, temp_data_di
     mock_sleep.return_value = future
 
     # Call the function
-    result = await run_docker_compose(temp_data_dir, debug=True)
+    with mock.patch(
+        "sapo.cli.install_mode.docker.container.DockerContainerManager.wait_for_health",
+        mock.AsyncMock(return_value=True),
+    ):
+        result = await run_docker_compose(temp_data_dir, debug=True)
 
     # Check the result
     assert result is True
