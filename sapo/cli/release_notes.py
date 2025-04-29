@@ -13,17 +13,6 @@ import aiohttp
 
 console = Console()
 
-# Primary URL for self-hosted release notes
-RELEASE_URLS = [
-    # Direct version URLs
-    "https://jfrog.com/help/r/jfrog-release-information/artifactory-{version}-self-hosted",
-    "https://jfrog.com/help/r/jfrog-release-information/artifactory-{version}",
-    # Version list pages
-    "https://jfrog.com/help/r/jfrog-release-information/artifactory-self-hosted-releases",
-    "https://jfrog.com/help/r/jfrog-release-information/artifactory-release-notes",
-    "https://jfrog.com/help/r/jfrog-release-information/artifactory-cloud-releases",
-]
-
 # Base URL and map ID for JFrog's help system
 BASE_URL = "https://jfrog.com/help"
 MAP_ID = "booxtVWM8HjIoXm7gJVD9A"
