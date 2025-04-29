@@ -20,9 +20,9 @@ def test_install_command(mock_install):
 
 
 @patch("sapo.cli.cli.list_versions")
-def test_versions_command(mock_list_versions):
-    """Test the versions command."""
-    result = runner.invoke(app, ["versions", "--limit", "5"])
+def test_releases_command(mock_list_versions):
+    """Test the releases command."""
+    result = runner.invoke(app, ["releases", "--limit", "5"])
     assert result.exit_code == 0
     mock_list_versions.assert_called_once_with(limit=5)
 

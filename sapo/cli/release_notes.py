@@ -11,6 +11,8 @@ from rich.table import Table
 from rich.text import Text
 import aiohttp
 
+from sapo.cli.http import create_client_session
+
 console = Console()
 
 # Base URL and map ID for JFrog's help system
@@ -139,7 +141,8 @@ async def get_release_notes(
 ) -> Optional[Dict[str, Any]]:
     """Get release notes for a specific version."""
     try:
-        async with aiohttp.ClientSession() as session:
+        # Create a client session with proxy support
+        async with create_client_session(debug) as session:
             # First, get the map info to find the topics endpoint
             map_info = await get_map_info(session, debug)
             if not map_info:
@@ -192,7 +195,8 @@ async def list_available_versions(debug: bool = False) -> List[str]:
         url = "https://jfrog.com/help/r/jfrog-release-information/artifactory-self-hosted-releases"
         debug_print(f"Loading versions index: {url}", debug)
 
-        async with aiohttp.ClientSession() as session:
+        # Create a client session with proxy support
+        async with create_client_session(debug) as session:
             async with session.get(url) as response:
                 if response.status != 200:
                     debug_print("Failed to load versions index", debug)
