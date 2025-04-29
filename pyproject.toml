@@ -1,6 +1,6 @@
 [project]
 name = "sapo"
-version = "0.1.0"
+version = "0.2.0"
 description = "A CLI tool for installing and managing JFrog Artifactory OSS"
 authors = [
     {name = "Alberto Cavalcante", email = "54247214+albertocavalcante@users.noreply.github.com"}
@@ -8,12 +8,14 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "requests (>=2.32.3,<3.0.0)",
-    "rich (>=13.9.4,<14.0.0)",
-    "typer (>=0.15.2,<0.16.0)",
-    "pydantic (>=2.6.0,<2.10.0)",
-    "tqdm (>=4.67.1,<5.0.0)",
-    "semver (>=3.0.4,<4.0.0)"
+    "requests >= 2.32.3, < 3.0.0",
+    "rich >= 13.9.4, < 14.0.0",
+    "typer >= 0.15.2, < 0.16.0",
+    "pydantic >= 2.6.0, < 2.10.0",
+    "tqdm >= 4.67.1, < 5.0.0",
+    "semver >= 3.0.4, < 4.0.0",
+    "aiohttp >= 3.9.3, < 4.0.0",
+    "beautifulsoup4 >= 4.12.3, < 5.0.0"
 ]
 
 [project.scripts]
@@ -31,6 +33,7 @@ ruff = "^0.11.2"
 black = "^24.2.0"
 bandit = "^1.8.3"
 safety = "^3.3.1"
+pytest-asyncio = "^0.26.0"
 
 [tool.mypy]
 python_version = "3.11"

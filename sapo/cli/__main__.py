@@ -1,5 +1,6 @@
 """Sapo CLI entry point."""
 
+import asyncio
 import typer
 from pathlib import Path
 from typing import Optional
@@ -12,6 +13,7 @@ from .artifactory import (
     show_info,
     ArtifactoryConfig,
 )
+from .release_notes import display_release_notes
 
 console = Console()
 
@@ -79,6 +81,17 @@ def info(
     """
     config = ArtifactoryConfig(version=version)
     show_info(config)
+
+
+@app.command(name="release-notes")
+def release_notes(
+    version: str = typer.Option(
+        ..., "--version", "-v", help="Artifactory version to get release notes for"
+    ),
+    debug: bool = typer.Option(False, "--debug", help="Enable debug output"),
+) -> None:
+    """Get release notes for a specific Artifactory version."""
+    asyncio.run(display_release_notes(version, debug))
 
 
 def main() -> None:
