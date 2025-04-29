@@ -204,7 +204,7 @@ async def list_available_versions(debug: bool = False) -> List[str]:
                 for link in soup.find_all("a", href=True):
                     # Try to extract version from URL
                     url_match = re.search(
-                        r"artifactory-([0-9]+\.[0-9]+\.[0-9]+)-self-hosted",
+                        r"artifactory-(\d+\.\d+\.\d+)-self-hosted",
                         link["href"],
                     )
                     if url_match:
@@ -215,7 +215,7 @@ async def list_available_versions(debug: bool = False) -> List[str]:
 
                     # Try to extract version from link text
                     text_match = re.match(
-                        r"^[0-9]+\.[0-9]+\.[0-9]+$", link.text.strip()
+                        r"^\d+\.\d+\.\d+$", link.text.strip()
                     )
                     if text_match and link.text.strip() not in versions:
                         versions.append(link.text.strip())
