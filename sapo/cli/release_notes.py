@@ -203,9 +203,7 @@ async def list_available_versions(debug: bool = False) -> List[str]:
                             continue
 
                     # Try to extract version from link text
-                    text_match = re.match(
-                        r"^\d+\.\d+\.\d+$", link.text.strip()
-                    )
+                    text_match = re.match(r"^\d+\.\d+\.\d+$", link.text.strip())
                     if text_match and link.text.strip() not in versions:
                         versions.append(link.text.strip())
 
