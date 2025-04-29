@@ -1,0 +1,65 @@
+configVersion: 1
+shared:
+  security:
+    joinKey: "{{ joinkey }}"
+  node:
+    id: "art1"
+    ip: "localhost"
+    haEnabled: false
+  database:
+{% if use_postgres %}
+    type: postgresql
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/{{ postgres_db }}?autosave=conservative&prepareThreshold=0
+    username: {{ postgres_user }}
+    password: {{ postgres_password }}
+    properties:
+      # Control the number of DB connections in the pool
+      poolMaximumActiveConnections: 100
+      # Connection validation - ensures connections are valid
+      validationQuery: "SELECT 1"
+      # Fast connection recovery
+      testWhileIdle: true
+      testOnBorrow: true
+{% else %}
+    type: derby
+    driver: org.apache.derby.jdbc.EmbeddedDriver
+    url: jdbc:derby:data/derby/artifactory;create=true
+    username: artifactory
+    password: password
+{% endif %}
+
+artifactory:
+  port: 8081
+  primary: true
+  pool:
+    # Max threads for handling user requests
+    maxThreads: 200
+  # Additional Java options
+  javaOpts: "-Xms512m -Xmx4g -Xss256k -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
+
+  # HTTP request timeouts
+  network:
+    requestTimeout: 60
+    connectionTimeout: 10
+
+  # Cache management
+  cache:
+    periodicCacheClearEnabled: true
+    periodicCacheClearIntervalSecs: 43200
+
+  # Security settings
+  security:
+    cookieExpirySeconds: 3600
+    passwordExpiryDays: 60
+    inactivityExpiryDays: 90
+    lockMaxRetries: 5
+    lockTimeoutSecs: 300
+
+  # Access control related settings
+  access:
+    # Allow anonymous access (default)
+    anonymous:
+      enabled: true
+      # Which auth server is used to authenticate with (default)
+      authServer: "local"
