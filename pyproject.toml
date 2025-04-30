@@ -56,7 +56,10 @@ testpaths = [
     "tests",
 ]
 python_files = ["test_*.py"]
-
+markers = [
+    "integration: marks tests as integration tests",
+    "network: marks tests that require network connectivity",
+]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
