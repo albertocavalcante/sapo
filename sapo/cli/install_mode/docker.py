@@ -5,7 +5,6 @@ including pulling images, setting up volumes, and creating containers.
 """
 
 import asyncio
-import os
 import secrets
 import shutil
 import string
@@ -35,29 +34,6 @@ console = Console()
 MIN_RECOMMENDED_FREE_SPACE_GB = 20
 # Warning threshold percentage
 DISK_SPACE_WARNING_THRESHOLD = 15
-
-
-def check_disk_space(path: Path) -> Tuple[float, float, float]:
-    """Check available disk space at the specified path.
-
-    Args:
-        path: Path to check disk space for
-
-    Returns:
-        Tuple[float, float, float]: (free space in GB, total space in GB, percentage free)
-    """
-    try:
-        stat = os.statvfs(path)
-        free_bytes = stat.f_bavail * stat.f_frsize
-        total_bytes = stat.f_blocks * stat.f_frsize
-        free_gb = free_bytes / (1024**3)
-        total_gb = total_bytes / (1024**3)
-        percentage_free = (free_bytes / total_bytes) * 100 if total_bytes > 0 else 0
-
-        return (free_gb, total_gb, percentage_free)
-    except Exception as e:
-        console.print(f"[yellow]Warning: Could not check disk space: {e}[/]")
-        return (0, 0, 0)
 
 
 class DockerConfig(BaseModel):

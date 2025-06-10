@@ -1,7 +1,7 @@
 """System utilities for handling platform-specific operations."""
 
-import os
 import platform
+import shutil
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Tuple
@@ -40,9 +40,8 @@ def check_disk_space(path: Path) -> Tuple[float, float, float]:
         Tuple[float, float, float]: (free space in GB, total space in GB, percentage free)
     """
     try:
-        stat = os.statvfs(path)
-        free_bytes = stat.f_bavail * stat.f_frsize
-        total_bytes = stat.f_blocks * stat.f_frsize
+        # Use shutil.disk_usage for cross-platform compatibility
+        total_bytes, used_bytes, free_bytes = shutil.disk_usage(path)
         free_gb = free_bytes / (1024**3)
         total_gb = total_bytes / (1024**3)
         percentage_free = (free_bytes / total_bytes) * 100 if total_bytes > 0 else 0

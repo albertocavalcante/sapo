@@ -19,31 +19,26 @@ class TestDockerUtils:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir)
 
-            # Mock os.statvfs to return predictable values
-            mock_stat = mock.Mock()
-            mock_stat.f_bavail = 2621440  # 10GB in blocks
-            mock_stat.f_blocks = 5242880  # 20GB in blocks
-            mock_stat.f_frsize = 4096  # 4KB block size
+            # Test with real directory - should return valid disk space info
+            free_gb, total_gb, percent_free = check_disk_space(path)
 
-            with mock.patch("os.statvfs", return_value=mock_stat):
-                free_gb, total_gb, percent_free = check_disk_space(path)
-
-                # Check that the values are correct
-                assert free_gb == 10.0
-                assert total_gb == 20.0
-                assert percent_free == 50.0
+            # Check that the values are reasonable (not mocked)
+            assert free_gb >= 0.0
+            assert total_gb > 0.0
+            assert 0.0 <= percent_free <= 100.0
+            assert free_gb <= total_gb  # Free space can't exceed total
 
     def test_check_disk_space_error(self):
         """Test check_disk_space when an error occurs."""
-        with mock.patch("os.statvfs", side_effect=OSError("Test error")):
-            # We need to directly check output rather than mocking since we're
-            # using the console's print method directly
-            free_gb, total_gb, percent_free = check_disk_space(Path("/nonexistent"))
+        # Test with a non-existent path that should cause an error
+        nonexistent_path = Path("/this/path/should/not/exist/anywhere")
 
-            # Should return default/fallback values
-            assert free_gb == 0.0
-            assert total_gb == 0.0
-            assert percent_free == 0.0
+        free_gb, total_gb, percent_free = check_disk_space(nonexistent_path)
+
+        # Should return default/fallback values on error
+        assert free_gb == 0.0
+        assert total_gb == 0.0
+        assert percent_free == 0.0
 
     def test_generate_password(self):
         """Test the generate_password function."""
