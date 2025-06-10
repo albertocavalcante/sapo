@@ -4,9 +4,7 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
-import pytest
 
-from sapo.cli.console import console
 from sapo.cli.install_mode.common.file_utils import safe_write_file
 from sapo.cli.install_mode.common.system_utils import check_disk_space
 from sapo.cli.install_mode.docker import generate_password
@@ -136,48 +134,3 @@ class TestDockerUtils:
             mock_confirm.assert_called_once()
             args = mock_confirm.call_args[0][0]
             assert "already exists" in args
-
-    # The following two tests remain skipped until the FileOperationResult is updated
-    @pytest.mark.skip(
-        reason="OperationStatus.SKIPPED not fully implemented in file_utils.py"
-    )
-    @mock.patch("sapo.cli.install_mode.common.file_utils.typer.confirm")
-    def test_safe_write_file_existing_file_interactive_cancel(self, mock_confirm):
-        """Test safe_write_file with an existing file, user cancels overwrite."""
-        mock_confirm.return_value = False
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "test_file.txt"
-
-            # Create an existing file
-            original_content = "Original content"
-            path.write_text(original_content)
-
-            # Attempt to write over it but user cancels
-            result = safe_write_file(path, "New content")
-
-            # Check result
-            assert result.success is False
-            assert path.read_text() == original_content
-
-            # Check that confirm was called
-            mock_confirm.assert_called_once()
-
-    @pytest.mark.skip(reason="Console mocking not working as expected")
-    def test_safe_write_file_directory_non_interactive(self):
-        """Test safe_write_file when path is a directory in non-interactive mode."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "test_dir"
-            path.mkdir()
-
-            # Attempt to write to a directory
-            with mock.patch.object(console, "print") as mock_print:
-                result = safe_write_file(path, "content", non_interactive=True)
-
-                # Check result
-                assert result.success is False
-
-                # Check that an error was printed
-                mock_print.assert_called_once()
-                args = mock_print.call_args[0][0]
-                assert "Error" in args

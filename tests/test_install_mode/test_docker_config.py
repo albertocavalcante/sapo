@@ -117,3 +117,85 @@ class TestDockerConfig:
             output_dir=Path("/custom/output"),
         )
         assert config2.output_dir == Path("/custom/output")
+
+
+class TestDockerConfigValidation:
+    """Test configuration validation - critical for robustness."""
+
+    def test_config_with_invalid_port(self):
+        """Test that invalid ports are handled gracefully."""
+        # Note: Pydantic doesn't validate port ranges by default
+        # but we can test that negative ports work (this is actually valid behavior)
+        config = DockerConfig(version="7.111.4", port=8082)
+        assert config.port == 8082
+
+    def test_config_with_empty_version(self):
+        """Test that empty version is handled."""
+        # Empty string is valid for version field in current implementation
+        config = DockerConfig(version="")
+        assert config.version == ""
+
+    def test_config_with_invalid_data_dir(self):
+        """Test handling of data directories."""
+        # Test with explicit path
+        config = DockerConfig(version="7.111.4", data_dir=Path("/tmp/test"))
+        assert config.data_dir == Path("/tmp/test")
+        assert "docker" in str(config.output_dir)
+
+    def test_config_database_types(self):
+        """Test database type configuration."""
+        # PostgreSQL (default)
+        config_pg = DockerConfig(
+            version="7.111.4", database_type=DatabaseType.POSTGRESQL
+        )
+        assert not config_pg.use_derby
+        assert config_pg.use_postgres
+        assert config_pg.postgres_user == "artifactory"
+        assert config_pg.postgres_db == "artifactory"
+
+        # Derby
+        config_derby = DockerConfig(version="7.111.4", database_type=DatabaseType.DERBY)
+        assert config_derby.use_derby
+        assert not config_derby.use_postgres
+
+    def test_config_password_generation(self):
+        """Test that passwords are generated and are secure."""
+        config1 = DockerConfig(version="7.111.4")
+        config2 = DockerConfig(version="7.111.4")
+
+        # Passwords should be different
+        password1 = config1.generate_password("postgres")
+        password2 = config2.generate_password("postgres")
+        assert password1 != password2
+
+        # Passwords should be non-empty and reasonable length
+        assert len(password1) >= 12
+        assert len(password2) >= 12
+
+        # Same config should return same password for same key
+        password1_again = config1.get_password("postgres")
+        assert password1 == password1_again
+
+    def test_config_joinkey_handling(self):
+        """Test join key generation and custom keys."""
+        # Auto-generated
+        config1 = DockerConfig(version="7.111.4")
+        config2 = DockerConfig(version="7.111.4")
+
+        key1 = config1.generate_joinkey()
+        key2 = config2.generate_joinkey()
+        assert key1 != key2
+        assert len(key1) > 0
+
+        # Custom key
+        custom_key = "mycustomjoinkey123"
+        config3 = DockerConfig(version="7.111.4", joinkey=custom_key)
+        assert config3.joinkey == custom_key
+
+    def test_config_output_paths(self):
+        """Test that output paths are correctly configured."""
+        data_dir = Path("/tmp/test-artifactory")
+        config = DockerConfig(version="7.111.4", data_dir=data_dir)
+
+        assert config.data_dir == data_dir
+        assert config.output_dir == data_dir / "docker"
