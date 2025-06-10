@@ -7,7 +7,7 @@ using the Typer framework to define the command structure and options.
 import asyncio
 import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -39,15 +39,13 @@ app = typer.Typer(
 volume_app = typer.Typer(help="Manage Docker volumes for Artifactory")
 app.add_typer(volume_app, name="volume")
 
-# Create an install subcommand group
-install_app = typer.Typer(help="Installation commands")
-app.add_typer(install_app, name="install-cmd")
+# Install subcommand group removed - using unified install command
 
 
 @app.command()
 def install(
     version: str = typer.Option(
-        "7.98.17", "--version", "-v", help="Artifactory version to install"
+        "7.111.9", "--version", "-v", help="Artifactory version to install"
     ),
     mode: InstallMode = typer.Option(
         None, "--mode", "-m", help="Installation mode (docker, local, helm)"
@@ -60,6 +58,7 @@ def install(
     ),
     destination: Optional[Path] = typer.Option(
         None,
+        "--destination",
         "--dest",
         "-d",
         help="Destination directory (defaults to $HOME/dev/tools for local, $HOME/.jfrog/artifactory for docker)",
@@ -95,10 +94,10 @@ def install(
         help="Docker volume driver to use for volumes (Docker mode only)",
     ),
     data_volume_size: Optional[str] = typer.Option(
-        None, "--data-size", help="Size for data volume, e.g. '50G' (Docker mode only)"
+        None, "--data-size", help="Size for data volume, e.g. '10G' (Docker mode only)"
     ),
     logs_volume_size: Optional[str] = typer.Option(
-        None, "--logs-size", help="Size for logs volume, e.g. '10G' (Docker mode only)"
+        None, "--logs-size", help="Size for logs volume, e.g. '3G' (Docker mode only)"
     ),
     backup_volume_size: Optional[str] = typer.Option(
         None,
@@ -108,7 +107,7 @@ def install(
     db_volume_size: Optional[str] = typer.Option(
         None,
         "--db-size",
-        help="Size for database volume, e.g. '20G' (Docker mode only)",
+        help="Size for database volume, e.g. '15G' (Docker mode only)",
     ),
     etc_volume_size: Optional[str] = typer.Option(
         None,
@@ -150,6 +149,10 @@ def install(
     """
     # Docker mode installation
     if mode == InstallMode.DOCKER:
+        # For Docker mode, default start to True if not explicitly set to False
+        if not start:
+            start = True
+
         # Handle volume options for Docker mode
         if use_named_volumes:
             console.print("[bold]Using named Docker volumes for Artifactory[/]")
@@ -256,7 +259,7 @@ def releases(
 @app.command()
 def info(
     version: str = typer.Option(
-        "7.98.17", "--version", "-v", help="Artifactory version to check"
+        "7.111.9", "--version", "-v", help="Artifactory version to check"
     ),
 ) -> None:
     """Show information about the script and available URLs.
@@ -300,16 +303,16 @@ def volume_create(
         None, "--driver", "-d", help="Docker volume driver to use"
     ),
     data_size: Optional[str] = typer.Option(
-        "50G", "--data-size", help="Size for data volume"
+        "10G", "--data-size", help="Size for data volume"
     ),
     logs_size: Optional[str] = typer.Option(
-        "10G", "--logs-size", help="Size for logs volume"
+        "3G", "--logs-size", help="Size for logs volume"
     ),
     backup_size: Optional[str] = typer.Option(
         "20G", "--backup-size", help="Size for backup volume"
     ),
     db_size: Optional[str] = typer.Option(
-        "20G", "--db-size", help="Size for database volume"
+        "15G", "--db-size", help="Size for database volume"
     ),
 ) -> None:
     """Create a new set of Docker volumes for Artifactory.
@@ -649,151 +652,4 @@ def analyze(
     result = volume_manager.analyze_data_usage(name)
     if "error" in result:
         console.print(f"[bold red]Analysis failed:[/] {result['error']}")
-        raise typer.Exit(1)
-
-
-@install_app.command()
-async def docker(
-    version: str = typer.Option(
-        "latest", "--version", "-v", help="Artifactory version to install"
-    ),
-    platform: Optional[Platform] = typer.Option(
-        None, "--platform", "-p", help="Platform to install (default: auto-detect)"
-    ),
-    destination: Optional[Path] = typer.Option(
-        None,
-        "--destination",
-        "-d",
-        help="Destination directory for Artifactory installation",
-    ),
-    port: int = typer.Option(8081, "--port", "-P", help="Port to run Artifactory on"),
-    start: bool = typer.Option(
-        True, "--start/--no-start", help="Start Artifactory after installation"
-    ),
-    non_interactive: bool = typer.Option(
-        False, "--non-interactive", "-n", help="Non-interactive mode"
-    ),
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug output"),
-    use_named_volumes: bool = typer.Option(
-        False, "--use-volumes", help="Use Docker named volumes instead of bind mounts"
-    ),
-    volume_driver: str = typer.Option(
-        "local", "--volume-driver", help="Docker volume driver to use for named volumes"
-    ),
-    data_size: str = typer.Option(
-        "50G", "--data-size", help="Size to allocate for data volume"
-    ),
-    logs_size: str = typer.Option(
-        "10G", "--logs-size", help="Size to allocate for logs volume"
-    ),
-    backup_size: str = typer.Option(
-        "20G", "--backup-size", help="Size to allocate for backup volume"
-    ),
-    db_size: str = typer.Option(
-        "20G", "--db-size", help="Size to allocate for PostgreSQL volume"
-    ),
-    etc_size: str = typer.Option(
-        "1G", "--etc-size", help="Size to allocate for etc volume"
-    ),
-    data_path: Optional[Path] = typer.Option(
-        None, "--data-path", help="Host path to bind for data volume"
-    ),
-    logs_path: Optional[Path] = typer.Option(
-        None, "--logs-path", help="Host path to bind for logs volume"
-    ),
-    backup_path: Optional[Path] = typer.Option(
-        None, "--backup-path", help="Host path to bind for backup volume"
-    ),
-    db_path: Optional[Path] = typer.Option(
-        None, "--db-path", help="Host path to bind for database volume"
-    ),
-    etc_path: Optional[Path] = typer.Option(
-        None, "--etc-path", help="Host path to bind for etc volume"
-    ),
-) -> None:
-    """Install Artifactory using Docker.
-
-    Creates and configures Docker containers for Artifactory and PostgreSQL.
-    """
-    # Import check_docker_installed here to avoid circular imports
-    from .install_mode.common import check_docker_installed
-
-    # Prepare installation
-    if not check_docker_installed():
-        sapo_console.error("Docker is not installed. Please install Docker first.")
-        raise typer.Exit(1)
-
-    if use_named_volumes:
-        # Format volume sizes correctly for the install function
-        volume_sizes: Dict[str, Dict[str, str]] = {}
-
-        # Create dictionary with size options for each volume type
-        if data_size:
-            volume_sizes["data"] = {"size": data_size}
-        if logs_size:
-            volume_sizes["logs"] = {"size": logs_size}
-        if backup_size:
-            volume_sizes["backup"] = {"size": backup_size}
-        if db_size:
-            volume_sizes["postgresql"] = {"size": db_size}
-        if etc_size:
-            volume_sizes["etc"] = {"size": etc_size}
-
-        # Collect host paths for volumes if specified
-        host_paths: Dict[str, Path] = {}
-        if data_path:
-            host_paths["data"] = data_path
-        if logs_path:
-            host_paths["logs"] = logs_path
-        if backup_path:
-            host_paths["backup"] = backup_path
-        if db_path:
-            host_paths["postgresql"] = db_path
-        if etc_path:
-            host_paths["etc"] = etc_path
-
-        # Check if we're using host paths
-        using_host_paths = any([data_path, logs_path, backup_path, db_path, etc_path])
-
-        # Give warning if mixing named volumes with host paths
-        if using_host_paths:
-            sapo_console.warning("Notice: Using host paths with named volumes")
-            sapo_console.info(
-                "This will create named volumes bound to specific directories on your host"
-            )
-
-        # Run installation
-        status = install_docker_sync(
-            version=version,
-            platform=platform,
-            destination=destination,
-            port=port,
-            start=start,
-            non_interactive=non_interactive,
-            verbose=verbose,
-            debug=debug,
-            use_named_volumes=use_named_volumes,
-            volume_driver=volume_driver,
-            volume_sizes=volume_sizes,
-            host_paths=host_paths if using_host_paths else None,
-        )
-    else:
-        # For bind mount mode, we don't pass volume sizes
-        status = install_docker_sync(
-            version=version,
-            platform=platform,
-            destination=destination,
-            port=port,
-            start=start,
-            non_interactive=non_interactive,
-            verbose=verbose,
-            debug=debug,
-            use_named_volumes=False,
-        )
-
-    if status == OperationStatus.SUCCESS:
-        sapo_console.success("Artifactory installation completed successfully.")
-    else:
-        sapo_console.error("Artifactory installation failed.")
         raise typer.Exit(1)

@@ -187,15 +187,16 @@ class DockerFileManager:
                     "logs_volume_name": self.volume_names.get(
                         "logs", "artifactory_logs"
                     ),
-                    "backup_volume_name": self.volume_names.get(
-                        "backup", "artifactory_backup"
-                    ),
                     "etc_volume_name": self.volume_names.get("etc", "artifactory_etc"),
                     "postgres_volume_name": self.volume_names.get(
                         "postgresql", "artifactory_postgresql"
                     ),
                 }
             )
+
+            # Only include backup volume name if it actually exists
+            if "backup" in self.volume_names:
+                template_context["backup_volume_name"] = self.volume_names["backup"]
 
         docker_compose_content = render_template_from_file(
             "docker", "docker-compose.yml.j2", template_context

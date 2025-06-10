@@ -1,15 +1,22 @@
 """Common functionality for installation modes."""
 
-from enum import Enum
+from enum import Enum, auto
 import subprocess
+from pathlib import Path
+from typing import Union, Dict, Any
+
+# Custom types
+PathLike = Union[str, Path]
+ConfigDict = Dict[str, Any]
 
 
-class OperationStatus(str, Enum):
-    """Track status of installation operations."""
+class OperationStatus(Enum):
+    """Operation result status codes."""
 
-    SUCCESS = "success"
-    ERROR = "error"
-    WARNING = "warning"
+    SUCCESS = auto()
+    ERROR = auto()
+    WARNING = auto()
+    SKIPPED = auto()  # Added for user-skipped operations
 
 
 class Platform(str, Enum):

@@ -5,15 +5,17 @@ generating the necessary docker-compose.yml and system.yaml files.
 """
 
 import asyncio
+import string
+import secrets
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 import typer
 from rich.console import Console
 
 from .config import DockerConfig, DatabaseType
 from .files import DockerFileManager
 from .container import DockerContainerManager
-from ..common import Platform
+from ..common import OperationStatus
 
 # Import volume management functionality
 from .volume import VolumeManager, VolumeType
@@ -29,6 +31,7 @@ __all__ = [
     "VolumeType",
     "generate_files",
     "run_docker_compose",
+    "generate_password",
 ]
 
 
@@ -158,17 +161,24 @@ async def install_docker(
 
                 # Create volume options dictionary with sizes
                 volume_opts = {}
-                for volume_type in [
+
+                # Only include backup volume if explicitly requested
+                volume_types_to_create = [
                     VolumeType.DATA,
                     VolumeType.LOGS,
-                    VolumeType.BACKUP,
                     VolumeType.POSTGRESQL,
-                ]:
+                ]
+
+                # Add backup volume only if user specified backup size
+                if "backup" in volume_sizes:
+                    volume_types_to_create.append(VolumeType.BACKUP)
+
+                for volume_type in volume_types_to_create:
                     # Set defaults by volume type
                     if volume_type == VolumeType.DATA and "data" not in volume_sizes:
-                        volume_opts[volume_type] = {"size": "50G"}
-                    elif volume_type == VolumeType.LOGS and "logs" not in volume_sizes:
                         volume_opts[volume_type] = {"size": "10G"}
+                    elif volume_type == VolumeType.LOGS and "logs" not in volume_sizes:
+                        volume_opts[volume_type] = {"size": "3G"}
                     elif (
                         volume_type == VolumeType.BACKUP
                         and "backup" not in volume_sizes
@@ -178,7 +188,7 @@ async def install_docker(
                         volume_type == VolumeType.POSTGRESQL
                         and "postgresql" not in volume_sizes
                     ):
-                        volume_opts[volume_type] = {"size": "20G"}
+                        volume_opts[volume_type] = {"size": "15G"}
 
                     # Override with user-specified sizes
                     if volume_type.value in volume_sizes:
@@ -346,60 +356,106 @@ async def install_docker(
 
 # Synchronous entry point for CLI
 def install_docker_sync(
-    version: str,
-    platform: Platform,
-    destination: Path,
-    port: int = 8082,
-    start: bool = False,
+    version: str = "latest",
+    platform: Optional[str] = None,
+    destination: Optional[Path] = None,
+    port: int = 8081,
+    start: bool = True,
     non_interactive: bool = False,
     verbose: bool = False,
-    use_derby: bool = False,
-    joinkey: Optional[str] = None,
     debug: bool = False,
     use_named_volumes: bool = False,
-    volume_driver: Optional[str] = None,
-    volume_sizes: Optional[Dict[str, str]] = None,
-) -> bool:
-    """Install JFrog Artifactory using Docker.
-
-    This is a synchronous wrapper for the async installation function.
+    volume_driver: str = "local",
+    volume_sizes: Optional[Dict[str, Union[str, Dict[str, str]]]] = None,
+    host_paths: Optional[Dict[str, Path]] = None,
+) -> OperationStatus:
+    """Synchronous wrapper for the install_docker function.
 
     Args:
-        version: The version of Artifactory to install
-        platform: The platform to install for
-        destination: The directory to install to
-        port: The port to run Artifactory on
+        version: Artifactory version to install
+        platform: Platform to install on (linux, darwin, windows)
+        destination: Installation directory
+        port: Port to run Artifactory on
         start: Whether to start Artifactory after installation
         non_interactive: Whether to run in non-interactive mode
-        verbose: Whether to display verbose output
-        use_derby: Whether to use Derby instead of PostgreSQL
-        joinkey: Security join key (generated if not provided)
-        debug: Whether to show detailed debug output
+        verbose: Whether to show verbose output
+        debug: Whether to show debug output
         use_named_volumes: Whether to use Docker named volumes
         volume_driver: Docker volume driver to use
-        volume_sizes: Size configuration for Docker volumes
+        volume_sizes: Dictionary of volume sizes by volume type
+        host_paths: Dictionary of host paths by volume type
 
     Returns:
-        bool: True if installation was successful, False otherwise
+        OperationStatus: Success or error status
     """
     try:
-        asyncio.run(
+        # Use the local async Docker installation function from this module
+        return asyncio.run(
             install_docker(
                 version=version,
                 port=port,
                 data_dir=destination,
                 non_interactive=non_interactive,
                 start=start,
-                use_derby=use_derby,
-                joinkey=joinkey,
-                debug=debug or verbose,
+                debug=debug,
                 use_named_volumes=use_named_volumes,
                 volume_driver=volume_driver,
                 volume_sizes=volume_sizes,
             )
         )
-        return True
-    except typer.Exit as e:
-        return e.exit_code == 0
-    except Exception:
-        return False
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
+        return OperationStatus.WARNING
+    except Exception as e:
+        # Catch and report any exceptions
+        from rich.console import Console
+
+        console = Console()
+        console.print(f"[bold red]Error during installation:[/] {e}")
+
+        # Print traceback in debug mode
+        if debug:
+            import traceback
+
+            console.print(traceback.format_exc())
+
+        return OperationStatus.ERROR
+
+
+_password_cache: Dict[str, str] = {}
+
+
+def generate_password(key: str) -> str:
+    """Generate a secure random password.
+
+    Args:
+        key: Identifier for the password
+
+    Returns:
+        str: The generated password
+    """
+    if key not in _password_cache:
+        # Use Docker/YAML-safe character classes for password complexity
+        letters = string.ascii_letters
+        digits = string.digits
+        # Use only Docker/YAML-safe special characters (avoid $, `, \, ", ')
+        special_chars = "!@#%^&*()-_=+[]{}|;:,.<>/?"
+
+        # Create a base password that has at least one of each required character type
+        base_password = [
+            secrets.choice(letters),  # At least one letter
+            secrets.choice(digits),  # At least one digit
+            secrets.choice(special_chars),  # At least one special char
+        ]
+
+        # Fill the rest with random selections from all characters
+        all_chars = letters + digits + special_chars
+        base_password.extend(
+            secrets.choice(all_chars) for _ in range(32 - len(base_password))
+        )
+
+        # Shuffle the password to avoid predictable character placement
+        secrets.SystemRandom().shuffle(base_password)
+        _password_cache[key] = "".join(base_password)
+
+    return _password_cache[key]

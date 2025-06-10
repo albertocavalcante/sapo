@@ -625,10 +625,10 @@ class VolumeManager:
         # Create default size options if not provided
         if not size_opts:
             size_opts = {
-                VolumeType.DATA: {"size": "50G"},
-                VolumeType.LOGS: {"size": "10G"},
+                VolumeType.DATA: {"size": "10G"},
+                VolumeType.LOGS: {"size": "3G"},
                 VolumeType.BACKUP: {"size": "20G"},
-                VolumeType.POSTGRESQL: {"size": "20G"},
+                VolumeType.POSTGRESQL: {"size": "15G"},
                 VolumeType.ETC: {"size": "1G"},
             }
 

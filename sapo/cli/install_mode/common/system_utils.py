@@ -1,5 +1,6 @@
 """System utilities for handling platform-specific operations."""
 
+import os
 import platform
 from enum import Enum
 from pathlib import Path
@@ -27,6 +28,29 @@ def get_platform() -> Platform:
         return Platform(system)
     except ValueError:
         return Platform.UNKNOWN
+
+
+def check_disk_space(path: Path) -> Tuple[float, float, float]:
+    """Check available disk space at the specified path.
+
+    Args:
+        path: Path to check disk space for
+
+    Returns:
+        Tuple[float, float, float]: (free space in GB, total space in GB, percentage free)
+    """
+    try:
+        stat = os.statvfs(path)
+        free_bytes = stat.f_bavail * stat.f_frsize
+        total_bytes = stat.f_blocks * stat.f_frsize
+        free_gb = free_bytes / (1024**3)
+        total_gb = total_bytes / (1024**3)
+        percentage_free = (free_bytes / total_bytes) * 100 if total_bytes > 0 else 0
+
+        return (free_gb, total_gb, percentage_free)
+    except Exception as e:
+        console.print(f"[yellow]Error getting disk space: {e}[/]")
+        return (0.0, 0.0, 0.0)
 
 
 def set_directory_permissions(

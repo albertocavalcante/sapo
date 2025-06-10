@@ -57,10 +57,11 @@ class DockerConfig(BaseModel):
             str: The generated password
         """
         if key not in self._passwords:
-            # Generate a strong password with mixed characters
+            # Generate a strong password with Docker/YAML-safe characters
             letters = string.ascii_letters
             digits = string.digits
-            special_chars = "!@#$%^&*()-_=+[]{}|;:,.<>/?"
+            # Use only Docker/YAML-safe special characters (avoid $, `, \, ", ')
+            special_chars = "!@#%^&*()-_=+[]{}|;:,.<>/?"
             charset = letters + digits + special_chars
 
             # Start with a base of minimum required characters (one of each type)

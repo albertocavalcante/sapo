@@ -602,10 +602,15 @@ async def _setup_docker_volumes(
             volume_types = {
                 "data": VolumeType.DATA,
                 "logs": VolumeType.LOGS,
-                "backup": VolumeType.BACKUP,
                 "postgresql": VolumeType.POSTGRESQL,
                 "etc": VolumeType.ETC,
             }
+
+            # Only add backup volume if explicitly requested
+            if (volume_sizes and "backup" in volume_sizes) or (
+                host_paths and "backup" in host_paths
+            ):
+                volume_types["backup"] = VolumeType.BACKUP
 
             # Create each volume
             for vol_name, vol_type in volume_types.items():

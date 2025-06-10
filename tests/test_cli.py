@@ -37,7 +37,7 @@ def test_info_command(mock_show_info):
     # Verify the config passed to show_info
     config_arg = mock_show_info.call_args[0][0]
     assert isinstance(config_arg, ArtifactoryConfig)
-    assert config_arg.version == "7.98.17"  # Default value
+    assert config_arg.version == "7.111.9"  # Updated default value
 
 
 @patch("sapo.cli.cli.asyncio.run")
