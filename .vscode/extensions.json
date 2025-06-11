@@ -2,6 +2,7 @@
     "recommendations": [
         "samuelcolvin.jinjahtml",
         "ms-azuretools.vscode-docker",
-        "ms-python.python"
+        "ms-python.python",
+        "charliermarsh.ruff"
     ]
 }
