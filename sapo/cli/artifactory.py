@@ -189,7 +189,6 @@ def install_artifactory(
         console.print(f"[red]Failed to extract archive: {extraction_error}[/red]")
         raise typer.Exit(1)
 
-    # Debug: Check if extract path exists and has files
     try:
         console.print(f"\nChecking extract path: {config.extract_path}")
         if config.extract_path.exists():
@@ -208,7 +207,6 @@ def install_artifactory(
     except Exception as e:
         console.print(f"[yellow]Error checking extract path: {str(e)}[/yellow]")
 
-    # Clean up if requested
     if not config.keep_archive:
         try:
             config.download_path.unlink()

@@ -41,8 +41,55 @@ pipx install dist/sapo-0.1.0.tar.gz
 
 ### Alternative Installation Methods 🔧
 
-#### Using Docker Compose 🐳
-If you prefer using Docker, you can install Artifactory using Docker Compose. This method is particularly useful for containerized environments or when you want to run Artifactory in isolation. For detailed instructions, see the [official JFrog documentation](https://jfrog.com/help/r/jfrog-installation-setup-documentation/install-artifactory-single-node-with-docker-compose).
+#### Using Docker (Containerized Installation) 🐳
+
+Sapo supports installing Artifactory in a containerized environment using Docker Compose. This method creates a production-ready setup with PostgreSQL database and persistent volumes.
+
+```bash
+# Basic Docker installation (recommended defaults)
+sapo install --mode docker
+
+# Install with custom port and destination
+sapo install --mode docker --port 8080 --destination ~/my-artifactory
+
+# Install with named Docker volumes for persistence
+sapo install --mode docker --use-volumes --data-size 100G --logs-size 5G
+
+# Install with backup volume (only created when requested)
+sapo install --mode docker --use-volumes --backup-size 50G
+
+# Install with host path mounting
+sapo install --mode docker --use-volumes --data-path /opt/artifactory/data --logs-path /opt/artifactory/logs
+
+# Install with custom database and volume settings
+sapo install --mode docker --use-volumes --volume-driver local --db-size 30G
+```
+
+**Key Features:**
+- **Automatic PostgreSQL Setup**: Creates a PostgreSQL container for production-grade database support
+- **Storage Efficient**: Pre-configured with minimal resource usage (2GB Java heap, 15GB database, 3GB logs)
+- **Persistent Storage**: Support for both Docker named volumes and host path mounting  
+- **Production Ready**: Generates `docker-compose.yml`, `.env`, and `system.yaml` configuration files
+- **Auto-start Option**: Starts containers immediately after installation (enabled by default)
+
+**Default Volume Sizes** (when using `--use-volumes`):
+- **Data Volume**: 10GB (for artifacts and metadata)
+- **Logs Volume**: 3GB (application and access logs)
+- **Database Volume**: 15GB (PostgreSQL data)
+- **Backup Volume**: 20GB (created only when `--backup-size` is specified)
+
+**Default Memory Configuration**:
+- **JVM Heap**: 512MB initial, 2GB maximum (adjustable via system.yaml)
+- **Log Retention**: 50MB per file, 10 files maximum
+
+**Generated Files:**
+- `docker-compose.yml` - Complete container orchestration setup
+- `.env` - Environment variables for ports, database, and JVM configuration  
+- `system.yaml` - Artifactory system configuration optimized for Docker environment
+
+For advanced volume management, use the `sapo volume` commands to create, backup, and manage Docker volumes.
+
+> **Note**: The basic `sapo install --mode docker` command uses bind mounts and is highly storage-efficient - it only uses actual disk space as needed. Add `--use-volumes` for production deployments with proper Docker volume management. Backup volumes are only created when explicitly requested with `--backup-size` to minimize storage overhead.
 
 #### Using Helm (Kubernetes) 🎮
 For Kubernetes environments, you can install Artifactory using the official JFrog Helm chart. This method is ideal for container orchestration and provides additional features like automatic scaling and high availability. For detailed instructions, see the [official JFrog Helm chart documentation](https://github.com/jfrog/charts/tree/master/stable/artifactory-oss).
@@ -118,20 +165,26 @@ sapo versions --limit 0
 
 #### Install Artifactory ⚙️
 ```bash
-# Install the latest version (7.98.17)
+# Install the latest version (7.111.9) locally
 sapo install
 
 # Install a specific version
-sapo install --version 7.98.16
+sapo install --version 7.111.4
 
 # Install for a different platform
 sapo install --platform linux
 
 # Install with custom destination
-sapo install --dest /path/to/destination
+sapo install --destination /path/to/destination
 
 # Keep the downloaded archive
 sapo install --keep
+
+# Install using Docker (recommended for production)
+sapo install --mode docker
+
+# Install Docker with custom port
+sapo install --mode docker --port 8080
 ```
 
 #### Show Installation Information ℹ️
@@ -140,7 +193,7 @@ sapo install --keep
 sapo info
 
 # Show info for a specific version
-sapo info --version 7.98.16
+sapo info --version 7.111.4
 ```
 
 ### Platform-Specific Behavior
@@ -161,25 +214,49 @@ sapo info --version 7.98.16
 sapo versions
 
 # 2. Get information about a specific version
-sapo info --version 7.98.17
+sapo info --version 7.111.9
 
-# 3. Install the version
-sapo install --version 7.98.17 --keep
+# 3. Install the version locally
+sapo install --version 7.111.9 --keep
+
+# 4. Or install with Docker for production
+sapo install --mode docker --version 7.111.9
 ```
 
 #### Development Setup 💻
 ```bash
-# Install for development with custom path
-sapo install --version 7.98.17 --dest ~/projects/artifactory-dev --keep
+# Local development with custom path
+sapo install --version 7.111.9 --destination ~/projects/artifactory-dev --keep
+
+# Docker development with custom port
+sapo install --mode docker --port 8080 --destination ~/dev/artifactory
+```
+
+#### Production Docker Setup 🐳
+```bash
+# Basic production setup (storage efficient)
+sapo install --mode docker --use-volumes
+
+# Advanced production with custom volumes and backup
+sapo install --mode docker --use-volumes \
+  --data-size 200G --logs-size 20G --db-size 50G --backup-size 100G \
+  --port 8080
+
+# Production with host path mounting and backup
+sapo install --mode docker --use-volumes \
+  --data-path /opt/artifactory/data \
+  --logs-path /var/log/artifactory \
+  --backup-path /opt/artifactory/backup \
+  --db-path /opt/artifactory/db
 ```
 
 #### Cross-Platform Installation 🌐
 ```bash
 # Install Linux version on macOS
-sapo install --version 7.98.17 --platform linux
+sapo install --version 7.111.9 --platform linux
 
 # Install Windows version on macOS
-sapo install --version 7.98.17 --platform windows
+sapo install --version 7.111.9 --platform windows
 ```
 
 ## Development
