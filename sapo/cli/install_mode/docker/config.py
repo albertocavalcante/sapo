@@ -41,7 +41,7 @@ class DockerConfig(BaseModel):
     _passwords: Dict[str, str] = {}
 
     @model_validator(mode="after")
-    def set_default_output_dir(self):
+    def set_default_output_dir(self) -> "DockerConfig":
         """Set default output_dir based on data_dir if not provided."""
         if self.output_dir is None:
             self.output_dir = self.data_dir / "docker"
