@@ -843,7 +843,8 @@ class VolumeManager:
                         )
                     except Exception:
                         # Docker volume label is not supported in older Docker versions, so ignore errors
-                        pass
+                        # This is acceptable as label adding is optional metadata enhancement
+                        pass  # nosec B110
 
                 progress.update(
                     task,
