@@ -4,7 +4,7 @@ This module provides functionality for rendering templates for various configura
 """
 
 from pathlib import Path
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -13,7 +13,7 @@ def render_template_from_file(
     template_path: Union[str, Path],
     template_name: str,
     context: Dict[str, Any],
-    output_path: Path = None,
+    output_path: Optional[Path] = None,
 ) -> str:
     """Render a template from a file.
 

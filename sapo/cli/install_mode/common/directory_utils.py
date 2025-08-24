@@ -17,7 +17,7 @@ def ensure_directories(
     Returns:
         Dict[Path, Tuple[OperationStatus, Optional[str]]]: Status for each directory
     """
-    results = {}
+    results: Dict[Path, Tuple[OperationStatus, Optional[str]]] = {}
     for directory in directories:
         try:
             directory.mkdir(parents=True, exist_ok=True)
