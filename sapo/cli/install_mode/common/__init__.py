@@ -4,7 +4,7 @@ from enum import Enum, auto
 import subprocess  # nosec B404
 import shutil
 from pathlib import Path
-from typing import Union, Dict, Any, List, Optional
+from typing import Union, Dict, Any, List
 
 # Custom types
 PathLike = Union[str, Path]
