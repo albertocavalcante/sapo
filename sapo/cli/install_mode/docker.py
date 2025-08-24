@@ -357,9 +357,7 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
 
     try:
         # Check if Docker is available
-        run_docker_command(
-            ["docker", "--version"], check=True, capture_output=True
-        )
+        run_docker_command(["docker", "--version"], check=True, capture_output=True)
     except (subprocess.SubprocessError, FileNotFoundError, ValueError):
         console.print(
             "[bold red]Error:[/] Docker not found. Please install Docker and try again."
@@ -434,10 +432,7 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
         try:
             port_cmd = ["docker", "compose", "port", "artifactory", "8082"]
             port_result = run_docker_command(
-                port_cmd,
-                cwd=docker_compose_dir,
-                capture_output=True,
-                check=True
+                port_cmd, cwd=docker_compose_dir, capture_output=True, check=True
             )
 
             # Extract port from output like "0.0.0.0:8082"
@@ -484,7 +479,7 @@ def clean_docker_environment(docker_compose_dir: Path, debug: bool = False) -> b
                 ["docker", "compose", "down", "--volumes", "--remove-orphans"],
                 cwd=docker_compose_dir,
                 capture_output=True,
-                check=False
+                check=False,
             )
 
             if process.returncode == 0:
@@ -505,23 +500,21 @@ def clean_docker_environment(docker_compose_dir: Path, debug: bool = False) -> b
     try:
         # Remove artifactory container if it exists
         run_docker_command(
-            ["docker", "rm", "-f", "artifactory"], 
-            capture_output=True, 
-            check=False
+            ["docker", "rm", "-f", "artifactory"], capture_output=True, check=False
         )
 
         # Remove postgres container if it exists
         run_docker_command(
             ["docker", "rm", "-f", "artifactory-postgres"],
             capture_output=True,
-            check=False
+            check=False,
         )
 
         # Remove the network if it exists
         run_docker_command(
             ["docker", "network", "rm", "artifactory_network"],
             capture_output=True,
-            check=False
+            check=False,
         )
 
         console.print("[green]Cleaned up artifactory containers.[/]")

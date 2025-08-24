@@ -670,7 +670,9 @@ class TestVolumeManagerUtilities:
         """Test _run_command with capture_output=False."""
         manager = VolumeManager()
 
-        with patch("sapo.cli.install_mode.docker.volume.run_docker_command") as mock_run:
+        with patch(
+            "sapo.cli.install_mode.docker.volume.run_docker_command"
+        ) as mock_run:
             mock_process = Mock()
             mock_run.return_value = mock_process
 
@@ -685,7 +687,9 @@ class TestVolumeManagerUtilities:
         """Test _run_command with check=False."""
         manager = VolumeManager()
 
-        with patch("sapo.cli.install_mode.docker.volume.run_docker_command") as mock_run:
+        with patch(
+            "sapo.cli.install_mode.docker.volume.run_docker_command"
+        ) as mock_run:
             mock_process = Mock()
             mock_run.return_value = mock_process
 

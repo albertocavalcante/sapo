@@ -66,7 +66,7 @@ class DockerContainerManager:
                     ["docker", "compose", "down", "--volumes", "--remove-orphans"],
                     cwd=self.compose_dir,
                     capture_output=True,
-                    check=False
+                    check=False,
                 )
 
                 if process.returncode == 0:
@@ -87,16 +87,14 @@ class DockerContainerManager:
         try:
             # Remove artifactory container if it exists
             run_docker_command(
-                ["docker", "rm", "-f", "artifactory"], 
-                capture_output=True, 
-                check=False
+                ["docker", "rm", "-f", "artifactory"], capture_output=True, check=False
             )
 
             # Remove postgres container if it exists
             run_docker_command(
                 ["docker", "rm", "-f", "artifactory-postgres"],
                 capture_output=True,
-                check=False
+                check=False,
             )
 
             # Optionally remove the network if the compose shutdown failed. This keeps
@@ -109,7 +107,7 @@ class DockerContainerManager:
                 run_docker_command(
                     ["docker", "network", "rm", "artifactory_network"],
                     capture_output=True,
-                    check=False
+                    check=False,
                 )
 
             self.console.print("[green]Cleaned up artifactory containers.[/]")
@@ -196,10 +194,7 @@ class DockerContainerManager:
             try:
                 port_cmd = ["docker", "compose", "port", "artifactory", "8082"]
                 port_result = run_docker_command(
-                    port_cmd,
-                    cwd=self.compose_dir,
-                    capture_output=True,
-                    check=True
+                    port_cmd, cwd=self.compose_dir, capture_output=True, check=True
                 )
 
                 # Extract port from output like "0.0.0.0:8082"
@@ -282,7 +277,7 @@ class DockerContainerManager:
             result = run_docker_command(
                 ["docker", "inspect", "--format", "{{.State.Status}}", container_name],
                 capture_output=True,
-                check=False
+                check=False,
             )
 
             if result.returncode != 0:
@@ -323,7 +318,7 @@ class DockerContainerManager:
                         container_name,
                     ],
                     capture_output=True,
-                    check=False
+                    check=False,
                 )
 
                 if health.returncode == 0 and health.stdout.strip() == "unhealthy":

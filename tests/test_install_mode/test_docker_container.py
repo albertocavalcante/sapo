@@ -61,9 +61,7 @@ class TestDockerContainerManager:
         # Verify result
         assert result is True
         mock_run.assert_called_once_with(
-            ["docker", "--version"],
-            check=True,
-            capture_output=True
+            ["docker", "--version"], check=True, capture_output=True
         )
 
         # Now test when Docker is not available

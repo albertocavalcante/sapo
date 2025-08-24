@@ -60,7 +60,7 @@ class DockerConfig(BaseModel):
             # Generate a strong password with Docker/YAML-safe characters
             letters = string.ascii_letters
             digits = string.digits
-            # Use only Docker/YAML-safe special characters 
+            # Use only Docker/YAML-safe special characters
             # Avoiding YAML-problematic chars: #, :, [, ], {, }, , and /
             special_chars = "!@%^&*()-_=+.<>|;"
             charset = letters + digits + special_chars
