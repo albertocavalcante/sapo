@@ -704,9 +704,10 @@ class TestVolumeManagerUtilities:
         """Test _run_command error handling and reporting."""
         manager = VolumeManager()
 
-        with patch("subprocess.run") as mock_run:
-            error = subprocess.CalledProcessError(1, ["docker", "fail"])
-            mock_run.side_effect = error
+        with patch("shutil.which", return_value="/usr/bin/docker"):
+            with patch("subprocess.run") as mock_run:
+                error = subprocess.CalledProcessError(1, ["docker", "fail"])
+                mock_run.side_effect = error
 
-            with pytest.raises(subprocess.CalledProcessError):
-                manager._run_command(["docker", "fail"])
+                with pytest.raises(subprocess.CalledProcessError):
+                    manager._run_command(["docker", "fail"])
