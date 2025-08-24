@@ -3,14 +3,14 @@
 import signal
 import sys
 from pathlib import Path
-from typing import Set
+from typing import Any
 
 from rich.console import Console
 
 console = Console()
 
 # Global set to track temporary files for cleanup
-_temp_files: Set[Path] = set()
+_temp_files: set[Path] = set()
 
 
 def register_temp_file(file_path: Path) -> None:
@@ -34,7 +34,7 @@ def cleanup() -> None:
             )
 
 
-def signal_handler(signum: int, frame) -> None:
+def signal_handler(signum: int, frame: Any) -> None:
     """
     Handle interrupt signals.
 

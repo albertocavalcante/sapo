@@ -36,12 +36,14 @@ class ProgressTracker:
         )
         self.task = self.progress.add_task(description, total=total)
 
-    def __enter__(self) -> 'ProgressTracker':
+    def __enter__(self) -> "ProgressTracker":
         """Start the progress tracking."""
         self.progress.start()
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Any) -> None:
+    def __exit__(
+        self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Any
+    ) -> None:
         """Stop the progress tracking."""
         self.progress.stop()
 
