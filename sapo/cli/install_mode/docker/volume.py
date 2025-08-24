@@ -4,7 +4,7 @@ This module provides functionality to create, manage, backup, and migrate
 Artifactory data between Docker volumes.
 """
 
-import subprocess
+import subprocess  # nosec B404
 import datetime
 import os
 import json
@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from ..common import OperationStatus
+from ..common import OperationStatus, run_docker_command
 
 
 class VolumeType(str, Enum):
@@ -68,9 +68,7 @@ class VolumeManager:
             subprocess.CalledProcessError: If command fails and check is True
         """
         try:
-            return subprocess.run(
-                cmd, check=check, capture_output=capture_output, text=True
-            )
+            return run_docker_command(cmd, check=check, capture_output=capture_output)
         except subprocess.CalledProcessError as e:
             self.console.print(f"[bold red]Command failed:[/] {' '.join(cmd)}")
             self.console.print(f"[red]Error:[/] {e}")

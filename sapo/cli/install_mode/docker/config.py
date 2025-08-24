@@ -1,7 +1,7 @@
 """Docker configuration models for Artifactory."""
 
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Self
 import secrets
 import string
 from enum import Enum
@@ -41,7 +41,7 @@ class DockerConfig(BaseModel):
     _passwords: Dict[str, str] = {}
 
     @model_validator(mode="after")
-    def set_default_output_dir(self) -> "DockerConfig":
+    def set_default_output_dir(self) -> Self:
         """Set default output_dir based on data_dir if not provided."""
         if self.output_dir is None:
             self.output_dir = self.data_dir / "docker"
@@ -60,8 +60,9 @@ class DockerConfig(BaseModel):
             # Generate a strong password with Docker/YAML-safe characters
             letters = string.ascii_letters
             digits = string.digits
-            # Use only Docker/YAML-safe special characters (avoid $, `, \, ", ')
-            special_chars = "!@#%^&*()-_=+[]{}|;:,.<>/?"
+            # Use only Docker/YAML-safe special characters 
+            # Avoiding YAML-problematic chars: #, :, [, ], {, }, , and /
+            special_chars = "!@%^&*()-_=+.<>|;"
             charset = letters + digits + special_chars
 
             # Start with a base of minimum required characters (one of each type)

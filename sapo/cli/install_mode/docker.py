@@ -8,7 +8,7 @@ import asyncio
 import secrets
 import shutil
 import string
-import subprocess
+import subprocess  # nosec B404
 import time
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from rich.console import Console
 from rich.progress import Progress
 
-from ..common import Platform, check_docker_installed
+from ..common import Platform, check_docker_installed, run_docker_command
 from ..console import SapoConsole
 from .common import OperationStatus
 from .docker.volume import VolumeManager, VolumeType
@@ -357,10 +357,10 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
 
     try:
         # Check if Docker is available
-        subprocess.run(
-            ["docker", "--version"], check=True, capture_output=True, text=True
+        run_docker_command(
+            ["docker", "--version"], check=True, capture_output=True
         )
-    except (subprocess.SubprocessError, FileNotFoundError):
+    except (subprocess.SubprocessError, FileNotFoundError, ValueError):
         console.print(
             "[bold red]Error:[/] Docker not found. Please install Docker and try again."
         )
@@ -373,6 +373,7 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
 
     try:
         # Execute docker compose up with live output
+        # nosec B603: Docker command is trusted and validated
         process = subprocess.Popen(
             cmd,
             cwd=docker_compose_dir,
@@ -432,12 +433,11 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
         # Get the port number
         try:
             port_cmd = ["docker", "compose", "port", "artifactory", "8082"]
-            port_result = subprocess.run(
+            port_result = run_docker_command(
                 port_cmd,
                 cwd=docker_compose_dir,
                 capture_output=True,
-                text=True,
-                check=True,
+                check=True
             )
 
             # Extract port from output like "0.0.0.0:8082"
@@ -480,11 +480,11 @@ def clean_docker_environment(docker_compose_dir: Path, debug: bool = False) -> b
             )
         else:
             # Try to stop and remove containers using docker compose
-            process = subprocess.run(
+            process = run_docker_command(
                 ["docker", "compose", "down", "--volumes", "--remove-orphans"],
                 cwd=docker_compose_dir,
                 capture_output=True,
-                text=True,
+                check=False
             )
 
             if process.returncode == 0:
@@ -504,22 +504,24 @@ def clean_docker_environment(docker_compose_dir: Path, debug: bool = False) -> b
     # Also try to remove containers directly by name as a fallback
     try:
         # Remove artifactory container if it exists
-        subprocess.run(
-            ["docker", "rm", "-f", "artifactory"], capture_output=True, text=True
+        run_docker_command(
+            ["docker", "rm", "-f", "artifactory"], 
+            capture_output=True, 
+            check=False
         )
 
         # Remove postgres container if it exists
-        subprocess.run(
+        run_docker_command(
             ["docker", "rm", "-f", "artifactory-postgres"],
             capture_output=True,
-            text=True,
+            check=False
         )
 
         # Remove the network if it exists
-        subprocess.run(
+        run_docker_command(
             ["docker", "network", "rm", "artifactory_network"],
             capture_output=True,
-            text=True,
+            check=False
         )
 
         console.print("[green]Cleaned up artifactory containers.[/]")

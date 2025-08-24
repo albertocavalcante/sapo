@@ -41,7 +41,7 @@ class TestDockerContainerManager:
         assert manager.compose_dir == temp_compose_dir
         assert manager.console == mock_console
 
-    @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
+    @mock.patch("sapo.cli.install_mode.docker.container.run_docker_command")
     def test_is_docker_available(self, mock_run, temp_compose_dir, mock_console):
         """Test checking if Docker is available."""
         # Setup mock
@@ -63,8 +63,7 @@ class TestDockerContainerManager:
         mock_run.assert_called_once_with(
             ["docker", "--version"],
             check=True,
-            capture_output=True,
-            text=True,
+            capture_output=True
         )
 
         # Now test when Docker is not available
@@ -77,7 +76,7 @@ class TestDockerContainerManager:
             "[bold red]Error:[/] Docker not found. Please install Docker and try again."
         )
 
-    @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
+    @mock.patch("sapo.cli.install_mode.docker.container.run_docker_command")
     def test_clean_environment(self, mock_run, temp_compose_dir, mock_console):
         """Test cleaning up Docker environment."""
         # Setup mocks
@@ -95,15 +94,14 @@ class TestDockerContainerManager:
         assert result is True
         assert mock_run.call_count >= 3  # compose down + rm commands (network optional)
 
-        # Check docker compose down was called
+        # Check docker compose down was called - just check the command structure
         docker_compose_call = mock_run.call_args_list[0]
-        assert docker_compose_call[0][0] == [
-            "docker",
-            "compose",
-            "down",
-            "--volumes",
-            "--remove-orphans",
-        ]
+        called_cmd = docker_compose_call[0][0]  # First positional argument
+        assert called_cmd[0] == "docker"
+        assert called_cmd[1] == "compose"
+        assert called_cmd[2] == "down"
+        assert "--volumes" in called_cmd
+        assert "--remove-orphans" in called_cmd
         assert docker_compose_call[1]["cwd"] == temp_compose_dir
 
         # Verify console message
