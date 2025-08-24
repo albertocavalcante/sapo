@@ -110,9 +110,10 @@ class TestDockerContainerManager:
             "[green]Cleaned up artifactory containers.[/]"
         )
 
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     def test_clean_environment_with_errors(
-        self, mock_run, temp_compose_dir, mock_console
+        self, mock_run, mock_which, temp_compose_dir, mock_console
     ):
         """Test cleaning up Docker environment with errors."""
         # Setup mocks for compose failure
@@ -160,13 +161,14 @@ class TestDockerContainerManager:
         )
 
     @pytest.mark.asyncio
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.Popen")
     @mock.patch(
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers(
-        self, mock_is_docker, mock_popen, mock_run, temp_compose_dir, mock_console
+        self, mock_is_docker, mock_popen, mock_run, mock_which, temp_compose_dir, mock_console
     ):
         """Test starting Docker containers."""
         # Setup mocks
@@ -215,13 +217,14 @@ class TestDockerContainerManager:
         )
 
     @pytest.mark.asyncio
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.Popen")
     @mock.patch(
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers_failure(
-        self, mock_is_docker, mock_popen, mock_run, temp_compose_dir, mock_console
+        self, mock_is_docker, mock_popen, mock_run, mock_which, temp_compose_dir, mock_console
     ):
         """Test starting Docker containers with failure."""
         # Setup mocks
@@ -253,8 +256,9 @@ class TestDockerContainerManager:
         )
         mock_console.print.assert_any_call("[red]Error: failed to start[/]")
 
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
-    def test_get_container_status(self, mock_run, temp_compose_dir, mock_console):
+    def test_get_container_status(self, mock_run, mock_which, temp_compose_dir, mock_console):
         """Test getting container status."""
         # Setup mocks for different status cases
         mock_run.side_effect = [

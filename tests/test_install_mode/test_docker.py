@@ -165,8 +165,9 @@ class TestDockerTemplates:
 @pytest.mark.asyncio
 @mock.patch("asyncio.sleep")
 @mock.patch("subprocess.Popen")
+@mock.patch("shutil.which", return_value="/usr/bin/docker")
 @mock.patch("subprocess.run")
-async def test_run_docker_compose(mock_run, mock_popen, mock_sleep, temp_data_dir):
+async def test_run_docker_compose(mock_run, mock_which, mock_popen, mock_sleep, temp_data_dir):
     """Test running docker compose."""
     # Configure mock for docker --version
     version_check = mock.MagicMock()
