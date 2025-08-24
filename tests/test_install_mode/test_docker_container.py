@@ -168,7 +168,13 @@ class TestDockerContainerManager:
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers(
-        self, mock_is_docker, mock_popen, mock_run, mock_which, temp_compose_dir, mock_console
+        self,
+        mock_is_docker,
+        mock_popen,
+        mock_run,
+        mock_which,
+        temp_compose_dir,
+        mock_console,
     ):
         """Test starting Docker containers."""
         # Setup mocks
@@ -224,7 +230,13 @@ class TestDockerContainerManager:
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers_failure(
-        self, mock_is_docker, mock_popen, mock_run, mock_which, temp_compose_dir, mock_console
+        self,
+        mock_is_docker,
+        mock_popen,
+        mock_run,
+        mock_which,
+        temp_compose_dir,
+        mock_console,
     ):
         """Test starting Docker containers with failure."""
         # Setup mocks
@@ -258,7 +270,9 @@ class TestDockerContainerManager:
 
     @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
-    def test_get_container_status(self, mock_run, mock_which, temp_compose_dir, mock_console):
+    def test_get_container_status(
+        self, mock_run, mock_which, temp_compose_dir, mock_console
+    ):
         """Test getting container status."""
         # Setup mocks for different status cases
         mock_run.side_effect = [
