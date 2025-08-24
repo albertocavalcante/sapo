@@ -136,8 +136,7 @@ class DockerContainerManager:
         try:
             # Execute docker compose up
             cmd = ["docker", "compose", "up", "-d"]
-            # nosec B603: Docker command is trusted and validated
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603
                 cmd,
                 cwd=self.compose_dir,
                 stdout=subprocess.PIPE,

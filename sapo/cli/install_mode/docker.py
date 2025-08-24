@@ -371,8 +371,7 @@ async def run_docker_compose(docker_compose_dir: Path, debug: bool = False) -> b
 
     try:
         # Execute docker compose up with live output
-        # nosec B603: Docker command is trusted and validated
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # nosec B603
             cmd,
             cwd=docker_compose_dir,
             stdout=subprocess.PIPE,
