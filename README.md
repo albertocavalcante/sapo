@@ -29,7 +29,7 @@ For detailed information about single-node installation, including prerequisites
 
 You can install Sapo in several ways:
 
-### Using pipx (Recommended) 🚀
+### Using pipx (Recommended)
 
 ```bash
 # Build the package using Poetry
@@ -208,7 +208,7 @@ sapo info --version 7.111.4
 
 ### Examples
 
-#### Complete Installation Process 🚀
+#### Complete Installation Process
 ```bash
 # 1. Check available versions
 sapo versions
