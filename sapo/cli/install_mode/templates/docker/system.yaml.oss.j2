@@ -1,0 +1,22 @@
+configVersion: 1
+shared:
+  security:
+    joinKey: "{{ joinkey }}"
+  node:
+    id: "art1"
+    ip: "localhost"
+    haEnabled: false
+  database:
+{% if use_postgres %}
+    type: postgresql
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/{{ postgres_db }}
+    username: {{ postgres_user }}
+    password: {{ postgres_password }}
+{% else %}
+    type: derby
+    driver: org.apache.derby.jdbc.EmbeddedDriver
+    url: jdbc:derby:data/derby/artifactory;create=true
+    username: artifactory
+    password: password
+{% endif %}

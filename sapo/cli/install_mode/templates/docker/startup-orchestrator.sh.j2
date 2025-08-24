@@ -1,0 +1,163 @@
+#!/bin/bash
+# Custom startup orchestration for JFrog Artifactory OSS
+# This script ensures services start in the correct order to prevent circular dependencies
+
+set -e
+
+# Configuration
+JF_PRODUCT_HOME="${JF_PRODUCT_HOME:-/opt/jfrog/artifactory}"
+LOG_DIR="${JF_PRODUCT_HOME}/var/log"
+MAX_RETRIES=40
+RETRY_DELAY=2
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Logging function
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
+
+error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1" >&2
+}
+
+warn() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
+}
+
+# Function to wait for a service to be ready
+wait_for_service() {
+    local service_name=$1
+    local health_url=$2
+    local max_attempts=${3:-$MAX_RETRIES}
+    local attempt=1
+    
+    log "Waiting for $service_name to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if curl -s -f "$health_url" > /dev/null 2>&1; then
+            log "$service_name is ready! ✅"
+            return 0
+        fi
+        
+        if [ $((attempt % 10)) -eq 0 ]; then
+            warn "Still waiting for $service_name (attempt $attempt/$max_attempts)..."
+        fi
+        
+        sleep $RETRY_DELAY
+        ((attempt++))
+    done
+    
+    error "$service_name failed to start after $max_attempts attempts"
+    return 1
+}
+
+# Function to check if a process is running
+is_process_running() {
+    local process_name=$1
+    pgrep -f "$process_name" > /dev/null 2>&1
+}
+
+# Main startup sequence
+main() {
+    log "Starting JFrog Artifactory services with orchestration..."
+    log "JF_PRODUCT_HOME: $JF_PRODUCT_HOME"
+    
+    # Ensure log directory exists
+    mkdir -p "$LOG_DIR"
+    
+    # Step 1: Start Access Service first (it has no dependencies)
+    log "Starting Access Service..."
+    if [ -x "$JF_PRODUCT_HOME/app/access/bin/access.sh" ]; then
+        "$JF_PRODUCT_HOME/app/access/bin/access.sh" start >> "$LOG_DIR/access-startup.log" 2>&1 &
+        
+        # Wait for Access to be fully ready
+        if ! wait_for_service "Access Service" "http://localhost:8040/access/api/v1/system/ping" 60; then
+            error "Access Service failed to start. Check logs at: $LOG_DIR/access-startup.log"
+            exit 1
+        fi
+    else
+        warn "Access Service script not found, skipping..."
+    fi
+    
+    # Step 2: Start Router Service (depends on Access)
+    log "Starting Router Service..."
+    if [ -x "$JF_PRODUCT_HOME/app/router/bin/router.sh" ]; then
+        "$JF_PRODUCT_HOME/app/router/bin/router.sh" start >> "$LOG_DIR/router-startup.log" 2>&1 &
+        
+        # Wait for Router to be fully ready
+        if ! wait_for_service "Router Service" "http://localhost:8046/router/api/v1/system/health" 60; then
+            error "Router Service failed to start. Check logs at: $LOG_DIR/router-startup.log"
+            exit 1
+        fi
+    else
+        warn "Router Service script not found, skipping..."
+    fi
+    
+    # Step 3: Start Metadata Service (if exists)
+    if [ -x "$JF_PRODUCT_HOME/app/metadata/bin/metadata.sh" ]; then
+        log "Starting Metadata Service..."
+        "$JF_PRODUCT_HOME/app/metadata/bin/metadata.sh" start >> "$LOG_DIR/metadata-startup.log" 2>&1 &
+        
+        # Give metadata service time to start (no health endpoint)
+        sleep 5
+    fi
+    
+    # Step 4: Start Artifactory Service (depends on Router)
+    log "Starting Artifactory Service..."
+    if [ -x "$JF_PRODUCT_HOME/app/bin/artifactory.sh" ]; then
+        "$JF_PRODUCT_HOME/app/bin/artifactory.sh" start >> "$LOG_DIR/artifactory-startup.log" 2>&1 &
+        
+        # Wait for Artifactory to be fully ready
+        if ! wait_for_service "Artifactory Service" "http://localhost:8081/artifactory/api/system/ping" 120; then
+            error "Artifactory Service failed to start. Check logs at: $LOG_DIR/artifactory-startup.log"
+            exit 1
+        fi
+    else
+        error "Artifactory Service script not found!"
+        exit 1
+    fi
+    
+    # Step 5: Start Frontend Service (depends on Router)
+    log "Starting Frontend Service..."
+    if [ -x "$JF_PRODUCT_HOME/app/frontend/bin/frontend.sh" ]; then
+        "$JF_PRODUCT_HOME/app/frontend/bin/frontend.sh" start >> "$LOG_DIR/frontend-startup.log" 2>&1 &
+        
+        # Frontend doesn't have a health endpoint, just give it time
+        sleep 10
+        
+        # Check if frontend process is running
+        if is_process_running "frontend"; then
+            log "Frontend Service started successfully ✅"
+        else
+            warn "Frontend Service may not have started properly"
+        fi
+    else
+        warn "Frontend Service script not found, skipping..."
+    fi
+    
+    log "All services started successfully! 🎉"
+    log "Artifactory should be accessible at: http://localhost:{{ external_port }}"
+    log "Default credentials: admin/password"
+    
+    # Monitor services and keep container running
+    log "Monitoring services..."
+    
+    # Tail the console log to keep the container running and show live logs
+    if [ -f "$LOG_DIR/console.log" ]; then
+        tail -f "$LOG_DIR/console.log"
+    else
+        # If console.log doesn't exist, monitor all service logs
+        tail -f "$LOG_DIR"/*.log
+    fi
+}
+
+# Trap signals to ensure clean shutdown
+trap 'log "Received shutdown signal, stopping services..."; exit 0' SIGTERM SIGINT
+
+# Run main function
+main "$@"

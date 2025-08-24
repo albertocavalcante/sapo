@@ -162,7 +162,7 @@ def safe_write_file(path: Path, content: str, non_interactive: bool = False) -> 
 
     # Write the file
     try:
-        path.write_text(content)
+        path.write_text(content, encoding="utf-8")
         return True
     except Exception as e:
         console.print(f"[bold red]Error:[/] Failed to write to {path}: {e}")
