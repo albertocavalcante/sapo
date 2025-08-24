@@ -66,13 +66,14 @@ class DockerConfig(BaseModel):
 
             # Start with a base of minimum required characters (one of each type)
             base_password = [
-                secrets.choice(letters),  # at least one letter
+                secrets.choice(string.ascii_uppercase),  # at least one uppercase letter
+                secrets.choice(string.ascii_lowercase),  # at least one lowercase letter
                 secrets.choice(digits),  # at least one digit
                 secrets.choice(special_chars),  # at least one special
             ]
 
-            # Fill the rest randomly from all chars
-            remaining_chars = [secrets.choice(charset) for _ in range(17)]
+            # Fill the rest randomly from all chars (16 more to get 20 total)
+            remaining_chars = [secrets.choice(charset) for _ in range(16)]
 
             # Combine and shuffle the full password
             password_chars = base_password + remaining_chars
