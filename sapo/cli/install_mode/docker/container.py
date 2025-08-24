@@ -1,12 +1,13 @@
 """Docker container management for Artifactory."""
 
-import subprocess
+import subprocess  # nosec B404
 import asyncio
 from pathlib import Path
 from typing import Optional
 from enum import Enum
 
 from rich.console import Console
+from ..common import run_docker_command
 
 
 class ContainerStatus(str, Enum):
@@ -33,11 +34,9 @@ class DockerContainerManager:
             bool: True if Docker is available
         """
         try:
-            subprocess.run(
-                ["docker", "--version"], check=True, capture_output=True, text=True
-            )
+            run_docker_command(["docker", "--version"], check=True, capture_output=True)
             return True
-        except (subprocess.SubprocessError, FileNotFoundError):
+        except (subprocess.SubprocessError, FileNotFoundError, ValueError):
             self.console.print(
                 "[bold red]Error:[/] Docker not found. Please install Docker and try again."
             )
@@ -63,11 +62,11 @@ class DockerContainerManager:
                 )
             else:
                 # Try to stop and remove containers using docker compose
-                process = subprocess.run(
+                process = run_docker_command(
                     ["docker", "compose", "down", "--volumes", "--remove-orphans"],
                     cwd=self.compose_dir,
                     capture_output=True,
-                    text=True,
+                    check=False,
                 )
 
                 if process.returncode == 0:
@@ -87,15 +86,15 @@ class DockerContainerManager:
         # Also try to remove containers directly by name as a fallback
         try:
             # Remove artifactory container if it exists
-            subprocess.run(
-                ["docker", "rm", "-f", "artifactory"], capture_output=True, text=True
+            run_docker_command(
+                ["docker", "rm", "-f", "artifactory"], capture_output=True, check=False
             )
 
             # Remove postgres container if it exists
-            subprocess.run(
+            run_docker_command(
                 ["docker", "rm", "-f", "artifactory-postgres"],
                 capture_output=True,
-                text=True,
+                check=False,
             )
 
             # Optionally remove the network if the compose shutdown failed. This keeps
@@ -105,10 +104,10 @@ class DockerContainerManager:
             # fails, which is already covered by tests that simulate failure.
 
             if "process" in locals() and process.returncode != 0:
-                subprocess.run(
+                run_docker_command(
                     ["docker", "network", "rm", "artifactory_network"],
                     capture_output=True,
-                    text=True,
+                    check=False,
                 )
 
             self.console.print("[green]Cleaned up artifactory containers.[/]")
@@ -137,6 +136,7 @@ class DockerContainerManager:
         try:
             # Execute docker compose up
             cmd = ["docker", "compose", "up", "-d"]
+            # nosec B603: Docker command is trusted and validated
             process = subprocess.Popen(
                 cmd,
                 cwd=self.compose_dir,
@@ -193,12 +193,8 @@ class DockerContainerManager:
             # Get the port number
             try:
                 port_cmd = ["docker", "compose", "port", "artifactory", "8082"]
-                port_result = subprocess.run(
-                    port_cmd,
-                    cwd=self.compose_dir,
-                    capture_output=True,
-                    text=True,
-                    check=True,
+                port_result = run_docker_command(
+                    port_cmd, cwd=self.compose_dir, capture_output=True, check=True
                 )
 
                 # Extract port from output like "0.0.0.0:8082"
@@ -278,10 +274,10 @@ class DockerContainerManager:
             ContainerStatus: Status of the container
         """
         try:
-            result = subprocess.run(
+            result = run_docker_command(
                 ["docker", "inspect", "--format", "{{.State.Status}}", container_name],
                 capture_output=True,
-                text=True,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -313,7 +309,7 @@ class DockerContainerManager:
 
             if status == "running":
                 # Check health status for running containers
-                health = subprocess.run(
+                health = run_docker_command(
                     [
                         "docker",
                         "inspect",
@@ -322,7 +318,7 @@ class DockerContainerManager:
                         container_name,
                     ],
                     capture_output=True,
-                    text=True,
+                    check=False,
                 )
 
                 if health.returncode == 0 and health.stdout.strip() == "unhealthy":

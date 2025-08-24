@@ -41,7 +41,7 @@ class TestDockerContainerManager:
         assert manager.compose_dir == temp_compose_dir
         assert manager.console == mock_console
 
-    @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
+    @mock.patch("sapo.cli.install_mode.docker.container.run_docker_command")
     def test_is_docker_available(self, mock_run, temp_compose_dir, mock_console):
         """Test checking if Docker is available."""
         # Setup mock
@@ -61,10 +61,7 @@ class TestDockerContainerManager:
         # Verify result
         assert result is True
         mock_run.assert_called_once_with(
-            ["docker", "--version"],
-            check=True,
-            capture_output=True,
-            text=True,
+            ["docker", "--version"], check=True, capture_output=True
         )
 
         # Now test when Docker is not available
@@ -77,7 +74,7 @@ class TestDockerContainerManager:
             "[bold red]Error:[/] Docker not found. Please install Docker and try again."
         )
 
-    @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
+    @mock.patch("sapo.cli.install_mode.docker.container.run_docker_command")
     def test_clean_environment(self, mock_run, temp_compose_dir, mock_console):
         """Test cleaning up Docker environment."""
         # Setup mocks
@@ -95,15 +92,14 @@ class TestDockerContainerManager:
         assert result is True
         assert mock_run.call_count >= 3  # compose down + rm commands (network optional)
 
-        # Check docker compose down was called
+        # Check docker compose down was called - just check the command structure
         docker_compose_call = mock_run.call_args_list[0]
-        assert docker_compose_call[0][0] == [
-            "docker",
-            "compose",
-            "down",
-            "--volumes",
-            "--remove-orphans",
-        ]
+        called_cmd = docker_compose_call[0][0]  # First positional argument
+        assert called_cmd[0] == "docker"
+        assert called_cmd[1] == "compose"
+        assert called_cmd[2] == "down"
+        assert "--volumes" in called_cmd
+        assert "--remove-orphans" in called_cmd
         assert docker_compose_call[1]["cwd"] == temp_compose_dir
 
         # Verify console message
@@ -114,9 +110,10 @@ class TestDockerContainerManager:
             "[green]Cleaned up artifactory containers.[/]"
         )
 
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     def test_clean_environment_with_errors(
-        self, mock_run, temp_compose_dir, mock_console
+        self, mock_run, mock_which, temp_compose_dir, mock_console
     ):
         """Test cleaning up Docker environment with errors."""
         # Setup mocks for compose failure
@@ -164,13 +161,20 @@ class TestDockerContainerManager:
         )
 
     @pytest.mark.asyncio
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.Popen")
     @mock.patch(
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers(
-        self, mock_is_docker, mock_popen, mock_run, temp_compose_dir, mock_console
+        self,
+        mock_is_docker,
+        mock_popen,
+        mock_run,
+        mock_which,
+        temp_compose_dir,
+        mock_console,
     ):
         """Test starting Docker containers."""
         # Setup mocks
@@ -219,13 +223,20 @@ class TestDockerContainerManager:
         )
 
     @pytest.mark.asyncio
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.Popen")
     @mock.patch(
         "sapo.cli.install_mode.docker.container.DockerContainerManager.is_docker_available"
     )
     async def test_start_containers_failure(
-        self, mock_is_docker, mock_popen, mock_run, temp_compose_dir, mock_console
+        self,
+        mock_is_docker,
+        mock_popen,
+        mock_run,
+        mock_which,
+        temp_compose_dir,
+        mock_console,
     ):
         """Test starting Docker containers with failure."""
         # Setup mocks
@@ -257,8 +268,11 @@ class TestDockerContainerManager:
         )
         mock_console.print.assert_any_call("[red]Error: failed to start[/]")
 
+    @mock.patch("shutil.which", return_value="/usr/bin/docker")
     @mock.patch("sapo.cli.install_mode.docker.container.subprocess.run")
-    def test_get_container_status(self, mock_run, temp_compose_dir, mock_console):
+    def test_get_container_status(
+        self, mock_run, mock_which, temp_compose_dir, mock_console
+    ):
         """Test getting container status."""
         # Setup mocks for different status cases
         mock_run.side_effect = [

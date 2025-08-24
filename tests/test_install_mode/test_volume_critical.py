@@ -32,13 +32,14 @@ class TestVolumeManagerCritical:
     def test_command_execution_failure_handling(self, volume_manager):
         """Test handling of command execution failures."""
         # Test that CalledProcessError is properly handled
-        with patch("subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(
-                1, ["docker"], stderr="Command failed"
-            )
+        with patch("shutil.which", return_value="/usr/bin/docker"):
+            with patch("subprocess.run") as mock_run:
+                mock_run.side_effect = subprocess.CalledProcessError(
+                    1, ["docker"], stderr="Command failed"
+                )
 
-            with pytest.raises(subprocess.CalledProcessError):
-                volume_manager._run_command(["docker", "invalid"])
+                with pytest.raises(subprocess.CalledProcessError):
+                    volume_manager._run_command(["docker", "invalid"])
 
     def test_volume_creation_success(self, volume_manager):
         """Test successful volume creation."""

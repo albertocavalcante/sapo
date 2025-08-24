@@ -36,6 +36,8 @@ def render_template_from_file(
         module_path = template_path
 
     # Create Jinja environment
+    # nosec B701: Templates are for infrastructure config (YAML/shell), not HTML
+    # Autoescape would break Docker Compose and shell script generation
     env = Environment(
         loader=FileSystemLoader(module_path),
         trim_blocks=True,

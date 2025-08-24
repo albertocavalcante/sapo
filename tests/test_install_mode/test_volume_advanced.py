@@ -670,39 +670,44 @@ class TestVolumeManagerUtilities:
         """Test _run_command with capture_output=False."""
         manager = VolumeManager()
 
-        with patch("subprocess.run") as mock_run:
+        with patch(
+            "sapo.cli.install_mode.docker.volume.run_docker_command"
+        ) as mock_run:
             mock_process = Mock()
             mock_run.return_value = mock_process
 
-            result = manager._run_command(["echo", "test"], capture_output=False)
+            result = manager._run_command(["docker", "version"], capture_output=False)
 
             assert result is mock_process
             mock_run.assert_called_once_with(
-                ["echo", "test"], check=True, capture_output=False, text=True
+                ["docker", "version"], check=True, capture_output=False
             )
 
     def test_run_command_no_check(self) -> None:
         """Test _run_command with check=False."""
         manager = VolumeManager()
 
-        with patch("subprocess.run") as mock_run:
+        with patch(
+            "sapo.cli.install_mode.docker.volume.run_docker_command"
+        ) as mock_run:
             mock_process = Mock()
             mock_run.return_value = mock_process
 
-            result = manager._run_command(["echo", "test"], check=False)
+            result = manager._run_command(["docker", "version"], check=False)
 
             assert result is mock_process
             mock_run.assert_called_once_with(
-                ["echo", "test"], check=False, capture_output=True, text=True
+                ["docker", "version"], check=False, capture_output=True
             )
 
     def test_run_command_error_handling(self) -> None:
         """Test _run_command error handling and reporting."""
         manager = VolumeManager()
 
-        with patch("subprocess.run") as mock_run:
-            error = subprocess.CalledProcessError(1, ["docker", "fail"])
-            mock_run.side_effect = error
+        with patch("shutil.which", return_value="/usr/bin/docker"):
+            with patch("subprocess.run") as mock_run:
+                error = subprocess.CalledProcessError(1, ["docker", "fail"])
+                mock_run.side_effect = error
 
-            with pytest.raises(subprocess.CalledProcessError):
-                manager._run_command(["docker", "fail"])
+                with pytest.raises(subprocess.CalledProcessError):
+                    manager._run_command(["docker", "fail"])
