@@ -8,7 +8,7 @@ import asyncio
 import string
 import secrets
 from pathlib import Path
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, cast
 import typer
 from rich.console import Console
 
@@ -205,7 +205,9 @@ async def install_docker(
 
                 # Create the volumes
                 volumes = volume_manager.create_volume_set(
-                    version_suffix, driver=volume_driver, size_opts=volume_opts
+                    version_suffix, 
+                    driver=volume_driver, 
+                    size_opts=cast(Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_opts)
                 )
 
                 # Store volume names for compose file generation
@@ -370,8 +372,8 @@ def install_docker_sync(
     debug: bool = False,
     use_named_volumes: bool = False,
     volume_driver: str = "local",
-    volume_sizes: Optional[Dict[str, Union[str, Dict[str, str]]]] = None,
-    host_paths: Optional[Dict[str, Path]] = None,
+    volume_sizes: Optional[dict[str, str]] = None,
+    host_paths: Optional[dict[str, Path]] = None,
 ) -> OperationStatus:
     """Synchronous wrapper for the install_docker function.
 

@@ -121,7 +121,7 @@ async def _parse_release_content(
             )
 
     severity_order = ["Critical", "High", "Medium", "Low"]
-    by_severity = {sev: [] for sev in severity_order}
+    by_severity: dict[str, list[dict[str, str]]] = {sev: [] for sev in severity_order}
     for issue in issues:
         sev = issue["severity"]
         if sev in by_severity:

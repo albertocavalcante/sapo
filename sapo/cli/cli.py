@@ -7,7 +7,7 @@ using the Typer framework to define the command structure and options.
 import asyncio
 import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, Dict, cast
 
 import typer
 from rich.console import Console
@@ -214,7 +214,7 @@ def install(
                 verbose=verbose,
                 debug=debug,
                 use_named_volumes=True,
-                volume_driver=volume_driver,
+                volume_driver=volume_driver or "local",
                 volume_sizes=volume_sizes,
                 host_paths=host_paths if using_host_paths else None,
             )
@@ -333,7 +333,9 @@ def volume_create(
     try:
         # Create volumes
         volumes = volume_manager.create_volume_set(
-            name, driver=driver, size_opts=volume_sizes
+            name, 
+            driver=driver, 
+            size_opts=cast(Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_sizes)
         )
 
         # Display created volumes

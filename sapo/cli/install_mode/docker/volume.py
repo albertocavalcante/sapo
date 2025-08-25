@@ -530,7 +530,7 @@ class VolumeManager:
 
             # Convert to human-readable format
             units = ["B", "KB", "MB", "GB", "TB"]
-            size_human = size_bytes
+            size_human = float(size_bytes)
             unit_index = 0
 
             while size_human > 1024 and unit_index < len(units) - 1:
@@ -641,7 +641,7 @@ class VolumeManager:
                         self.console.print(
                             f"[yellow]Warning: Unknown volume type '{key}', skipping host path[/]"
                         )
-                else:
+                elif isinstance(key, VolumeType):
                     normalized_host_paths[key] = path
 
         # Create each volume type
