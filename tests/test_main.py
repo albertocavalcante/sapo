@@ -1,6 +1,7 @@
 """Tests for the CLI entry point."""
 
 from unittest.mock import patch
+
 from sapo.cli.__main__ import main
 
 

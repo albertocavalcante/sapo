@@ -1,7 +1,7 @@
 """Tests for Docker container management."""
 
-import tempfile
 import subprocess
+import tempfile
 from pathlib import Path
 from unittest import mock
 
@@ -9,8 +9,8 @@ import pytest
 from rich.console import Console
 
 from sapo.cli.install_mode.docker.container import (
-    DockerContainerManager,
     ContainerStatus,
+    DockerContainerManager,
 )
 
 
@@ -217,9 +217,7 @@ class TestDockerContainerManager:
 
         # Verify success message
         mock_console.print.assert_any_call(
-            "[bold blue]Starting Artifactory with Docker Compose in {}...[/]".format(
-                temp_compose_dir
-            )
+            f"[bold blue]Starting Artifactory with Docker Compose in {temp_compose_dir}...[/]"
         )
 
     @pytest.mark.asyncio

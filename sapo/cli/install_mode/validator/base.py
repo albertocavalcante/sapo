@@ -2,15 +2,15 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Union
+from typing import Any
 
 
 @dataclass
 class ValidationResult:
     """Result of configuration validation."""
 
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
     @property
     def is_valid(self) -> bool:
@@ -30,7 +30,7 @@ class BaseValidator(ABC):
     """Base class for configuration validators."""
 
     @abstractmethod
-    def validate(self, config: Dict[str, Any]) -> ValidationResult:
+    def validate(self, config: dict[str, Any]) -> ValidationResult:
         """Validate configuration.
 
         Args:
@@ -41,7 +41,7 @@ class BaseValidator(ABC):
         """
         pass
 
-    def _key_exists(self, config: Dict[str, Any], key_path: str) -> bool:
+    def _key_exists(self, config: dict[str, Any], key_path: str) -> bool:
         """Check if a nested key exists in configuration.
 
         Args:
@@ -62,7 +62,7 @@ class BaseValidator(ABC):
 
         return True
 
-    def _get_value(self, config: Dict[str, Any], key_path: str) -> Optional[Any]:
+    def _get_value(self, config: dict[str, Any], key_path: str) -> Any | None:
         """Get value from nested key path.
 
         Args:
@@ -85,9 +85,9 @@ class BaseValidator(ABC):
 
     def _find_keys_recursive(
         self,
-        config: Union[Dict[str, Any], str, int, float, bool, None],
+        config: dict[str, Any] | str | int | float | bool | None,
         prefix: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """Recursively find all keys in configuration.
 
         Args:
@@ -97,7 +97,7 @@ class BaseValidator(ABC):
         Returns:
             List of all key paths in dot notation
         """
-        keys: List[str] = []
+        keys: list[str] = []
 
         if not isinstance(config, dict):
             return keys

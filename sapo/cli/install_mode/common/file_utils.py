@@ -1,8 +1,8 @@
 """File operation utilities for installation modes."""
 
-from pathlib import Path
-from typing import Optional
 import shutil
+from pathlib import Path
+
 import typer
 from rich.console import Console
 
@@ -14,9 +14,7 @@ console = Console()
 class FileOperationResult:
     """Result of a file operation with status and details."""
 
-    def __init__(
-        self, status: OperationStatus, path: Path, message: Optional[str] = None
-    ):
+    def __init__(self, status: OperationStatus, path: Path, message: str | None = None):
         self.status = status
         self.path = path
         self.message = message

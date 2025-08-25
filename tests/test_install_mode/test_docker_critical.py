@@ -10,9 +10,9 @@ from unittest import mock
 
 import pytest
 
-from sapo.cli.install_mode.docker.config import DockerConfig, DatabaseType
-from sapo.cli.install_mode.common.file_utils import safe_write_file
 from sapo.cli.install_mode.common import OperationStatus
+from sapo.cli.install_mode.common.file_utils import safe_write_file
+from sapo.cli.install_mode.docker.config import DatabaseType, DockerConfig
 
 
 class TestSafeWriteFile:

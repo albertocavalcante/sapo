@@ -1,10 +1,11 @@
 """Tests for archive extraction utilities."""
 
 import os
+import platform
 import tarfile
 import zipfile
 from pathlib import Path
-import platform
+
 import pytest
 
 from sapo.cli.archive import extract_archive

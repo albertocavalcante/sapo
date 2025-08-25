@@ -2,7 +2,7 @@
 
 import pytest
 
-from sapo.cli.install_mode.validator.errors import ValidationError, ConfigurationError
+from sapo.cli.install_mode.validator.errors import ConfigurationError, ValidationError
 
 
 class TestValidationError:

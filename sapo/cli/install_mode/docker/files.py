@@ -1,19 +1,17 @@
 """File generation and management for Docker installation."""
 
 import platform
-from pathlib import Path
-from typing import Dict, Optional
-from enum import Enum
 import shutil
+from enum import Enum
+from pathlib import Path
 
 from rich.console import Console
 
 from ..common import OperationStatus
-from ..common.file_utils import safe_write_file, FileOperationResult
 from ..common.directory_utils import create_artifactory_structure
+from ..common.file_utils import FileOperationResult, safe_write_file
 from ..common.system_utils import set_directory_permissions
 from ..templates import render_template_from_file
-
 from .config import DockerConfig
 
 
@@ -31,9 +29,9 @@ class DockerFileManager:
     def __init__(
         self,
         config: DockerConfig,
-        console: Optional[Console] = None,
+        console: Console | None = None,
         use_named_volumes: bool = False,
-        volume_names: Optional[Dict[str, str]] = None,
+        volume_names: dict[str, str] | None = None,
     ):
         self.config = config
         self.console = console or Console()
@@ -42,7 +40,7 @@ class DockerFileManager:
 
     def generate_all_files(
         self, non_interactive: bool = False
-    ) -> Dict[FileType, FileOperationResult]:
+    ) -> dict[FileType, FileOperationResult]:
         """Generate all files needed for Docker installation.
 
         Args:
@@ -70,7 +68,7 @@ class DockerFileManager:
 
         return results
 
-    def create_directories(self) -> Dict[str, Path]:
+    def create_directories(self) -> dict[str, Path]:
         """Create all necessary directories.
 
         Returns:

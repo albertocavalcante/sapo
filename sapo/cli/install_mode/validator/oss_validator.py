@@ -1,6 +1,6 @@
 """Validator for Artifactory OSS configuration."""
 
-from typing import Dict, Any, Union, Type, Optional
+from typing import Any
 
 from .base import BaseValidator, ValidationResult
 
@@ -21,7 +21,7 @@ class ArtifactoryOSSValidator(BaseValidator):
     }
 
     # Required keys with their expected types
-    REQUIRED_KEYS: Dict[str, Union[Type[Any], tuple[Type[Any], ...]]] = {
+    REQUIRED_KEYS: dict[str, type[Any] | tuple[type[Any], ...]] = {
         "configVersion": (int, float),
         "shared.security.joinKey": str,
         "shared.node.id": str,
@@ -29,7 +29,7 @@ class ArtifactoryOSSValidator(BaseValidator):
     }
 
     # Optional but recommended keys
-    RECOMMENDED_KEYS: Dict[str, Union[Type[Any], tuple[Type[Any], ...]]] = {
+    RECOMMENDED_KEYS: dict[str, type[Any] | tuple[type[Any], ...]] = {
         "shared.node.ip": str,
         "shared.node.haEnabled": bool,
         "shared.database.driver": str,
@@ -38,7 +38,7 @@ class ArtifactoryOSSValidator(BaseValidator):
         "shared.database.password": str,
     }
 
-    def validate(self, config: Dict[str, Any]) -> ValidationResult:
+    def validate(self, config: dict[str, Any]) -> ValidationResult:
         """Validate configuration for OSS edition.
 
         Args:
@@ -64,7 +64,7 @@ class ArtifactoryOSSValidator(BaseValidator):
         return result
 
     def _check_invalid_keys(
-        self, config: Dict[str, Any], result: ValidationResult
+        self, config: dict[str, Any], result: ValidationResult
     ) -> None:
         """Check for keys that are invalid in OSS version."""
         all_keys = set(self._find_keys_recursive(config))
@@ -84,7 +84,7 @@ class ArtifactoryOSSValidator(BaseValidator):
                 )
 
     def _check_required_keys(
-        self, config: Dict[str, Any], result: ValidationResult
+        self, config: dict[str, Any], result: ValidationResult
     ) -> None:
         """Check that all required keys are present."""
         for key_path, expected_types in self.REQUIRED_KEYS.items():
@@ -104,7 +104,7 @@ class ArtifactoryOSSValidator(BaseValidator):
                     )
 
     def _check_recommended_keys(
-        self, config: Dict[str, Any], result: ValidationResult
+        self, config: dict[str, Any], result: ValidationResult
     ) -> None:
         """Check for recommended keys and add warnings if missing."""
         for key_path, expected_type in self.RECOMMENDED_KEYS.items():
@@ -115,7 +115,7 @@ class ArtifactoryOSSValidator(BaseValidator):
                 )
 
     def _validate_values(
-        self, config: Dict[str, Any], result: ValidationResult
+        self, config: dict[str, Any], result: ValidationResult
     ) -> None:
         """Validate specific configuration values."""
         # Validate configVersion
@@ -154,9 +154,7 @@ class ArtifactoryOSSValidator(BaseValidator):
                 if not self._key_exists(config, key):
                     result.add_error(f"PostgreSQL requires '{key}' to be configured")
 
-    def _is_valid_join_key(
-        self, join_key: Optional[Union[str, int, float, bool]]
-    ) -> bool:
+    def _is_valid_join_key(self, join_key: str | int | float | bool | None) -> bool:
         """Check if join key has valid format."""
         if not isinstance(join_key, str):
             return False

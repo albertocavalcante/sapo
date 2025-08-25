@@ -1,7 +1,8 @@
 """Tests for Docker CLI commands using CliRunner."""
 
-from unittest import mock
 from pathlib import Path
+from unittest import mock
+
 import pytest
 from typer.testing import CliRunner
 

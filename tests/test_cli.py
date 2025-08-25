@@ -1,10 +1,11 @@
 """Tests for the CLI commands."""
 
 from unittest.mock import patch
-from typer.testing import CliRunner
-from sapo.cli.cli import app
-from sapo.cli.artifactory import ArtifactoryConfig
 
+from typer.testing import CliRunner
+
+from sapo.cli.artifactory import ArtifactoryConfig
+from sapo.cli.cli import app
 
 runner = CliRunner()
 

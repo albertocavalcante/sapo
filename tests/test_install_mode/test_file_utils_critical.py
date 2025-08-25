@@ -5,8 +5,8 @@ from pathlib import Path
 from unittest import mock
 
 from sapo.cli.install_mode.common import OperationStatus
-from sapo.cli.install_mode.common.file_utils import safe_write_file, FileOperationResult
 from sapo.cli.install_mode.common.directory_utils import ensure_directories
+from sapo.cli.install_mode.common.file_utils import FileOperationResult, safe_write_file
 
 
 class TestFileOperationSafety:

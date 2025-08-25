@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
-
 from sapo.cli.install_mode.common.file_utils import safe_write_file
 from sapo.cli.install_mode.common.system_utils import check_disk_space
 from sapo.cli.install_mode.docker import generate_password

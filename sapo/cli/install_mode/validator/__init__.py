@@ -1,8 +1,8 @@
 """Configuration validators for Artifactory installations."""
 
 from .base import BaseValidator, ValidationResult
+from .errors import ConfigurationError, ValidationError
 from .oss_validator import ArtifactoryOSSValidator
-from .errors import ValidationError, ConfigurationError
 
 __all__ = [
     "BaseValidator",

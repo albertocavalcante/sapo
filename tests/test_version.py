@@ -1,10 +1,9 @@
 """Tests for version listing and management."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-from unittest.mock import MagicMock
 
 from sapo.cli.platform import Platform
 from sapo.cli.version import (

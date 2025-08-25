@@ -1,6 +1,7 @@
 """Tests for size formatting utilities."""
 
 import pytest
+
 from sapo.cli.size import format_size
 
 

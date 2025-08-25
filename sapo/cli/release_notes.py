@@ -1,15 +1,15 @@
 """Release notes module."""
 
 import re
-from typing import Optional, List, Dict, Any
+from typing import Any
 
+import aiohttp
 from bs4 import BeautifulSoup
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
-import aiohttp
 
 from sapo.cli.http import create_client_session
 
@@ -28,7 +28,7 @@ def debug_print(msg: str, debug: bool = False) -> None:
 
 async def get_map_info(
     session: aiohttp.ClientSession, debug: bool = False
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Get map information containing endpoints."""
     url = f"{BASE_URL}/api/khub/maps/{MAP_ID}"
     debug_print(f"Loading map info from: {url}", debug)
@@ -50,7 +50,7 @@ async def get_map_info(
 
 async def get_topics(
     session: aiohttp.ClientSession, topics_endpoint: str, debug: bool = False
-) -> Optional[List[Dict[str, Any]]]:
+) -> list[dict[str, Any]] | None:
     """Get all topics from the topics endpoint."""
     url = f"{BASE_URL}{topics_endpoint}"
     debug_print(f"Loading topics from: {url}", debug)
@@ -69,8 +69,8 @@ async def get_topics(
 
 
 async def _find_target_topic(
-    topics: List[Dict[str, Any]], version: str, debug: bool = False
-) -> Optional[Dict[str, Any]]:
+    topics: list[dict[str, Any]], version: str, debug: bool = False
+) -> dict[str, Any] | None:
     """Find the topic that contains the specified version."""
     debug_print(f"Looking for version {version} in topics", debug)
     for topic in topics:
@@ -82,7 +82,7 @@ async def _find_target_topic(
 
 async def _parse_release_content(
     content: str, debug: bool = False
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Parse the HTML content of release notes."""
     soup = BeautifulSoup(content, "html.parser")
 
@@ -143,9 +143,7 @@ async def _parse_release_content(
     }
 
 
-async def get_release_notes(
-    version: str, debug: bool = False
-) -> Optional[Dict[str, Any]]:
+async def get_release_notes(version: str, debug: bool = False) -> dict[str, Any] | None:
     """Get release notes for a specific version."""
     try:
         # Create a client session with proxy support
@@ -196,7 +194,7 @@ async def get_release_notes(
         return None
 
 
-async def list_available_versions(debug: bool = False) -> List[str]:
+async def list_available_versions(debug: bool = False) -> list[str]:
     """List all available Artifactory versions with release notes."""
     try:
         url = "https://jfrog.com/help/r/jfrog-release-information/artifactory-self-hosted-releases"

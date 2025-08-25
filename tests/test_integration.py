@@ -3,8 +3,9 @@
 import os
 import shutil
 from pathlib import Path
-from typing import List
+
 import pytest
+
 from sapo.cli.archive.extractor import extract_archive
 
 
@@ -15,13 +16,13 @@ def temp_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def artifactory_versions() -> List[str]:
+def artifactory_versions() -> list[str]:
     """List of Artifactory versions to test."""
     return ["7.104.9", "7.49.3", "7.49.2"]
 
 
 def test_extract_artifactory_archive(
-    temp_dir: Path, artifactory_versions: List[str]
+    temp_dir: Path, artifactory_versions: list[str]
 ) -> None:
     """Test extracting Artifactory archives."""
     for version in artifactory_versions:

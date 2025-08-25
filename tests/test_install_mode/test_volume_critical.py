@@ -1,12 +1,13 @@
 """Tests for critical volume operations - data safety focused."""
 
-import pytest
 import subprocess
-from unittest.mock import Mock, patch
 from pathlib import Path
+from unittest.mock import Mock, patch
 
-from sapo.cli.install_mode.docker.volume import VolumeManager, VolumeType
+import pytest
+
 from sapo.cli.install_mode.common import OperationStatus
+from sapo.cli.install_mode.docker.volume import VolumeManager, VolumeType
 
 
 class TestVolumeManagerCritical:

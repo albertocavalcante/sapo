@@ -1,14 +1,13 @@
 """Directory management utilities."""
 
 from pathlib import Path
-from typing import Optional
 
 from . import OperationStatus
 
 
 def ensure_directories(
     directories: list[Path],
-) -> dict[Path, tuple[OperationStatus, Optional[str]]]:
+) -> dict[Path, tuple[OperationStatus, str | None]]:
     """Ensure all specified directories exist.
 
     Args:
@@ -17,7 +16,7 @@ def ensure_directories(
     Returns:
         Dict[Path, Tuple[OperationStatus, Optional[str]]]: Status for each directory
     """
-    results: dict[Path, tuple[OperationStatus, Optional[str]]] = {}
+    results: dict[Path, tuple[OperationStatus, str | None]] = {}
     for directory in directories:
         try:
             directory.mkdir(parents=True, exist_ok=True)
