@@ -1,14 +1,14 @@
 """Directory management utilities."""
 
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional
 
 from . import OperationStatus
 
 
 def ensure_directories(
-    directories: List[Path],
-) -> Dict[Path, Tuple[OperationStatus, Optional[str]]]:
+    directories: list[Path],
+) -> dict[Path, tuple[OperationStatus, Optional[str]]]:
     """Ensure all specified directories exist.
 
     Args:
@@ -17,7 +17,7 @@ def ensure_directories(
     Returns:
         Dict[Path, Tuple[OperationStatus, Optional[str]]]: Status for each directory
     """
-    results = {}
+    results: dict[Path, tuple[OperationStatus, Optional[str]]] = {}
     for directory in directories:
         try:
             directory.mkdir(parents=True, exist_ok=True)
@@ -28,7 +28,7 @@ def ensure_directories(
     return results
 
 
-def create_artifactory_structure(base_dir: Path) -> Dict[str, Path]:
+def create_artifactory_structure(base_dir: Path) -> dict[str, Path]:
     """Create the standard Artifactory directory structure.
 
     Args:

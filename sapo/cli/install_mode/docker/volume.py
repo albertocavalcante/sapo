@@ -485,9 +485,10 @@ class VolumeManager:
 
             import json
 
-            volumes = json.loads(result.stdout)
+            volumes: list[dict[str, Any]] = json.loads(result.stdout)
             if volumes and len(volumes) > 0:
-                return volumes[0]
+                volume_info: dict[str, Any] = volumes[0]
+                return volume_info
             return None
         except Exception:
             return None
@@ -530,7 +531,7 @@ class VolumeManager:
 
             # Convert to human-readable format
             units = ["B", "KB", "MB", "GB", "TB"]
-            size_human = size_bytes
+            size_human = float(size_bytes)
             unit_index = 0
 
             while size_human > 1024 and unit_index < len(units) - 1:
@@ -634,15 +635,15 @@ class VolumeManager:
         normalized_host_paths = {}
         if host_paths:
             for key, path in host_paths.items():
-                if isinstance(key, str):
+                if isinstance(key, VolumeType):
+                    normalized_host_paths[key] = path
+                elif isinstance(key, str):
                     try:
                         normalized_host_paths[VolumeType(key)] = path
                     except ValueError:
                         self.console.print(
                             f"[yellow]Warning: Unknown volume type '{key}', skipping host path[/]"
                         )
-                else:
-                    normalized_host_paths[key] = path
 
         # Create each volume type
         for volume_type in [
@@ -672,8 +673,7 @@ class VolumeManager:
                             driver_opts = size_opts[volume_type]
                         elif volume_type.value in size_opts:
                             driver_opts = size_opts[volume_type.value]
-                        elif "size" in size_opts:
-                            driver_opts = {"size": size_opts["size"]}
+                        # If no specific size opts found, use default
 
                 # Create the volume
                 volume_name = self.create_volume(
@@ -705,16 +705,16 @@ class VolumeManager:
 
     def generate_compose_volumes(
         self, volumes: Dict[VolumeType, str]
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> Dict[str, Dict[str, Union[str, bool]]]:
         """Generate volume configuration for docker-compose.yml.
 
         Args:
             volumes: Map of volume types to volume names
 
         Returns:
-            Dict[str, Dict[str, str]]: Volume configuration for docker-compose
+            Dict[str, Dict[str, Union[str, bool]]]: Volume configuration for docker-compose
         """
-        compose_volumes = {}
+        compose_volumes: Dict[str, Dict[str, Union[str, bool]]] = {}
 
         for volume_type, volume_name in volumes.items():
             compose_volumes[volume_name] = {"external": True}
@@ -963,4 +963,5 @@ class VolumeManager:
         if not info or "Labels" not in info:
             return {}
 
-        return info["Labels"]
+        labels: dict[str, str] = info["Labels"] or {}
+        return labels

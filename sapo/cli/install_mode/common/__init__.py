@@ -4,11 +4,11 @@ from enum import Enum, auto
 import subprocess  # nosec B404
 import shutil
 from pathlib import Path
-from typing import Union, Dict, Any, List
+from typing import Union, Any
 
 # Custom types
 PathLike = Union[str, Path]
-ConfigDict = Dict[str, Any]
+ConfigDict = dict[str, Any]
 
 
 class OperationStatus(Enum):
@@ -44,12 +44,12 @@ def check_docker_installed() -> bool:
 
 
 def run_docker_command(
-    cmd: List[str],
+    cmd: list[str],
     check: bool = True,
     capture_output: bool = True,
     bypass_validation: bool = False,
-    **kwargs,
-) -> subprocess.CompletedProcess:
+    **kwargs: Any,
+) -> subprocess.CompletedProcess[str]:
     """Securely run Docker commands with proper validation.
 
     This function addresses Bandit security warnings by:
@@ -92,7 +92,7 @@ def run_docker_command(
         secure_cmd = cmd
 
     # Set secure defaults for subprocess.run
-    secure_kwargs = {
+    secure_kwargs: dict[str, Any] = {
         "check": check,
         "capture_output": capture_output,
         "text": True,

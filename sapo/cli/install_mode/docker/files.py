@@ -77,7 +77,8 @@ class DockerFileManager:
             Dict[str, Path]: Map of directory names to paths
         """
         # Create output directory
-        self.config.output_dir.mkdir(parents=True, exist_ok=True)
+        if self.config.output_dir is not None:
+            self.config.output_dir.mkdir(parents=True, exist_ok=True)
 
         # If using named volumes, we only need to ensure the etc directory exists for system.yaml
         if self.use_named_volumes:
@@ -123,6 +124,8 @@ class DockerFileManager:
         Returns:
             FileOperationResult: Result of the operation
         """
+        if self.config.output_dir is None:
+            raise ValueError("output_dir must be set before generating files")
         env_content = render_template_from_file(
             "docker",
             "env.j2",
@@ -158,6 +161,8 @@ class DockerFileManager:
         Returns:
             FileOperationResult: Result of the operation
         """
+        if self.config.output_dir is None:
+            raise ValueError("output_dir must be set before generating files")
         # System YAML check
         system_yaml_exists = (self.config.data_dir / "etc" / "system.yaml").exists()
 
@@ -224,6 +229,8 @@ class DockerFileManager:
         Returns:
             FileOperationResult: Result of the operation
         """
+        if self.config.output_dir is None:
+            raise ValueError("output_dir must be set before generating files")
         system_yaml_content = render_template_from_file(
             "docker",
             "system.yaml.j2",

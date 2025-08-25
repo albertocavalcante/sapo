@@ -8,7 +8,7 @@ import asyncio
 import string
 import secrets
 from pathlib import Path
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, cast
 import typer
 from rich.console import Console
 
@@ -50,6 +50,8 @@ def generate_files(config: DockerConfig) -> Path:
     console = Console()
     file_manager = DockerFileManager(config, console)
     file_manager.generate_all_files(non_interactive=True)
+    if config.output_dir is None:
+        raise ValueError("output_dir should have been set by file manager")
     return config.output_dir
 
 
@@ -160,7 +162,7 @@ async def install_docker(
                 version_suffix = f"v{version.replace('.', '_')}"
 
                 # Create volume options dictionary with sizes
-                volume_opts = {}
+                volume_opts: dict[VolumeType, dict[str, str]] = {}
 
                 # Only include backup volume if explicitly requested
                 volume_types_to_create = [
@@ -203,7 +205,12 @@ async def install_docker(
 
                 # Create the volumes
                 volumes = volume_manager.create_volume_set(
-                    version_suffix, driver=volume_driver, size_opts=volume_opts
+                    version_suffix,
+                    driver=volume_driver,
+                    size_opts=cast(
+                        Optional[Dict[Union[VolumeType, str], Dict[str, str]]],
+                        volume_opts,
+                    ),
                 )
 
                 # Store volume names for compose file generation
@@ -273,6 +280,8 @@ async def install_docker(
             console.print("\n[bold]Starting Artifactory with Docker Compose...[/]")
 
             # Create container manager
+            if config.output_dir is None:
+                raise ValueError("output_dir must be set before starting containers")
             container_manager = DockerContainerManager(config.output_dir, console)
 
             # Clean up any existing containers first
@@ -366,8 +375,8 @@ def install_docker_sync(
     debug: bool = False,
     use_named_volumes: bool = False,
     volume_driver: str = "local",
-    volume_sizes: Optional[Dict[str, Union[str, Dict[str, str]]]] = None,
-    host_paths: Optional[Dict[str, Path]] = None,
+    volume_sizes: Optional[dict[str, str]] = None,
+    host_paths: Optional[dict[str, Path]] = None,
 ) -> OperationStatus:
     """Synchronous wrapper for the install_docker function.
 
@@ -390,7 +399,7 @@ def install_docker_sync(
     """
     try:
         # Use the local async Docker installation function from this module
-        return asyncio.run(
+        asyncio.run(
             install_docker(
                 version=version,
                 port=port,
@@ -403,6 +412,7 @@ def install_docker_sync(
                 volume_sizes=volume_sizes,
             )
         )
+        return OperationStatus.SUCCESS
     except KeyboardInterrupt:
         print("\nOperation cancelled by user.")
         return OperationStatus.WARNING

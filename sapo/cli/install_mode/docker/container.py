@@ -150,19 +150,20 @@ class DockerContainerManager:
             output_lines = []
 
             # Stream the output
-            while True:
-                output = process.stdout.readline()
-                if output:
-                    output_lines.append(output.strip())
-                    # Always show critical errors
-                    if "error" in output.lower() or "fail" in output.lower():
-                        self.console.print(f"[red]{output.strip()}[/]")
-                    # Show all output in debug mode
-                    elif debug:
-                        self.console.print(output.strip())
+            if process.stdout is not None:
+                while True:
+                    output = process.stdout.readline()
+                    if output:
+                        output_lines.append(output.strip())
+                        # Always show critical errors
+                        if "error" in output.lower() or "fail" in output.lower():
+                            self.console.print(f"[red]{output.strip()}[/]")
+                        # Show all output in debug mode
+                        elif debug:
+                            self.console.print(output.strip())
 
-                if output == "" and process.poll() is not None:
-                    break
+                    if output == "" and process.poll() is not None:
+                        break
 
             return_code = process.poll()
 
