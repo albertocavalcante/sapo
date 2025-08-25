@@ -15,7 +15,7 @@ Sapo is a CLI tool for downloading and installing JFrog Artifactory OSS. This gu
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.13 or higher
 - Docker (for Docker installation mode)
 - Sufficient disk space (minimum 20GB recommended)
 
@@ -23,44 +23,30 @@ Sapo is a CLI tool for downloading and installing JFrog Artifactory OSS. This gu
 ```bash
 # Using pipx (recommended)
 pipx install sapo
-
-# Or using pip
-pip install sapo
 ```
 
 ## Installation Modes
 
 ### Docker Mode (Recommended)
-The Docker mode provides a containerized installation with PostgreSQL database.
+The Docker mode provides a containerized installation.
 
 ```bash
 # Basic installation with defaults
 sapo install --mode docker
 
-# Specify edition (OSS or Pro)
-sapo install --mode docker --edition oss
-
 # Custom configuration
-sapo install --mode docker --port 8082 --data-dir ~/.artifactory
+sapo install --mode docker --port 8082
 ```
 
-### Direct Mode
-For direct installation on the host system (advanced users).
+### Local Mode
+For installing the downloaded archive on the host system.
 
 ```bash
-sapo install --mode direct --version 7.111.9
+sapo install --mode local --version 7.111.9 --destination ~/tools/artifactory
 ```
 
 ## Configuration
-
-### Environment Variables
-- `SAPO_DATA_DIR` - Default data directory
-- `SAPO_LOG_LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
-
-### Configuration Files
-- `system.yaml` - Main Artifactory configuration
-- `docker-compose.yml` - Docker deployment configuration
-- `.env` - Environment variables for Docker
+Configuration files and templates are generated as needed by the selected mode.
 
 ## Commands Reference
 
@@ -74,18 +60,18 @@ Options:
 - `--port` - HTTP port (default: 8082)
 - `--data-dir` - Data directory location
 
-### `sapo diagnose`
-Diagnose installation issues.
+### `sapo releases`
+List available Artifactory releases.
 
 ```bash
-sapo diagnose --path ~/.jfrog/artifactory
+sapo releases --limit 10
 ```
 
-### `sapo list`
-List available Artifactory versions.
+### `sapo release-notes`
+Show release notes for a given version.
 
 ```bash
-sapo list --edition oss
+sapo release-notes --version 7.111.9
 ```
 
 ## Best Practices
