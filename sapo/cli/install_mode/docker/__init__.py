@@ -50,6 +50,8 @@ def generate_files(config: DockerConfig) -> Path:
     console = Console()
     file_manager = DockerFileManager(config, console)
     file_manager.generate_all_files(non_interactive=True)
+    if config.output_dir is None:
+        raise ValueError("output_dir should have been set by file manager")
     return config.output_dir
 
 
@@ -160,7 +162,7 @@ async def install_docker(
                 version_suffix = f"v{version.replace('.', '_')}"
 
                 # Create volume options dictionary with sizes
-                volume_opts = {}
+                volume_opts: dict[VolumeType, dict[str, str]] = {}
 
                 # Only include backup volume if explicitly requested
                 volume_types_to_create = [
@@ -272,7 +274,9 @@ async def install_docker(
         if start:
             console.print("\n[bold]Starting Artifactory with Docker Compose...[/]")
 
-            # Create container manager
+            # Create container manager  
+            if config.output_dir is None:
+                raise ValueError("output_dir must be set before starting containers")
             container_manager = DockerContainerManager(config.output_dir, console)
 
             # Clean up any existing containers first
@@ -390,7 +394,7 @@ def install_docker_sync(
     """
     try:
         # Use the local async Docker installation function from this module
-        return asyncio.run(
+        asyncio.run(
             install_docker(
                 version=version,
                 port=port,
@@ -403,6 +407,7 @@ def install_docker_sync(
                 volume_sizes=volume_sizes,
             )
         )
+        return OperationStatus.SUCCESS
     except KeyboardInterrupt:
         print("\nOperation cancelled by user.")
         return OperationStatus.WARNING

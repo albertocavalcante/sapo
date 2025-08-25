@@ -88,8 +88,10 @@ def _extract_tar_member(
                             pass
             return True, None
         elif member.isfile():
-            with tar.extractfile(member) as source, open(target_path, "wb") as target:
-                shutil.copyfileobj(source, target)
+            source_file = tar.extractfile(member)
+            if source_file is not None:
+                with source_file as source, open(target_path, "wb") as target:
+                    shutil.copyfileobj(source, target)
             # Set the file permissions
             os.chmod(target_path, member.mode)
         elif member.isdir():
