@@ -2,7 +2,7 @@
 
 import pytest
 
-from sapo.cli.install_mode.validator.base import ValidationResult, BaseValidator
+from sapo.cli.install_mode.validator.base import BaseValidator, ValidationResult
 
 
 class TestValidationResult:

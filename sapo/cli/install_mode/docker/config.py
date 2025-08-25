@@ -1,10 +1,10 @@
 """Docker configuration models for Artifactory."""
 
-from pathlib import Path
-from typing import Optional, Dict, Self
 import secrets
 import string
 from enum import Enum
+from pathlib import Path
+from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -36,9 +36,9 @@ class DockerConfig(BaseModel):
     database_type: DatabaseType = Field(default=DatabaseType.POSTGRESQL)
     postgres_user: str = Field(default="artifactory")
     postgres_db: str = Field(default="artifactory")
-    output_dir: Optional[Path] = Field(default=None)
-    joinkey: Optional[str] = Field(default=None)
-    _passwords: Dict[str, str] = {}
+    output_dir: Path | None = Field(default=None)
+    joinkey: str | None = Field(default=None)
+    _passwords: dict[str, str] = {}
 
     @model_validator(mode="after")
     def set_default_output_dir(self) -> Self:

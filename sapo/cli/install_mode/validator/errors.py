@@ -1,12 +1,12 @@
 """Custom exceptions for configuration validation."""
 
-from typing import List, Optional, Any
+from typing import Any
 
 
 class ValidationError(Exception):
     """Raised when configuration validation fails."""
 
-    def __init__(self, message: str, errors: Optional[List[Any]] = None):
+    def __init__(self, message: str, errors: list[Any] | None = None):
         """Initialize validation error.
 
         Args:

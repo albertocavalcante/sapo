@@ -1,17 +1,17 @@
 """Tests for Docker installation mode."""
 
-from pathlib import Path
-import tempfile
-from unittest import mock
 import asyncio
-import subprocess
 import os
+import subprocess
+import tempfile
+from pathlib import Path
+from unittest import mock
 
-import pytest
 import jinja2
+import pytest
 
 from sapo.cli.install_mode.docker import run_docker_compose
-from sapo.cli.install_mode.docker.config import DockerConfig, DatabaseType
+from sapo.cli.install_mode.docker.config import DatabaseType, DockerConfig
 from sapo.cli.install_mode.templates import render_template_from_file
 
 

@@ -2,6 +2,7 @@
 
 import os
 from unittest.mock import patch
+
 from sapo.cli.http import create_client_session
 
 

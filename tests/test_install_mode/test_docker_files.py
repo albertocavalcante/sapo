@@ -1,16 +1,16 @@
 """Tests for Docker file generation."""
 
+import platform
 import tempfile
 from pathlib import Path
 from unittest import mock
-import platform
 
 import pytest
 from rich.console import Console
 
+from sapo.cli.install_mode.common import OperationStatus
 from sapo.cli.install_mode.docker.config import DockerConfig
 from sapo.cli.install_mode.docker.files import DockerFileManager, FileType
-from sapo.cli.install_mode.common import OperationStatus
 
 
 @pytest.fixture

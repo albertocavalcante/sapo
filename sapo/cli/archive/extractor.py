@@ -1,11 +1,11 @@
 """Archive extraction utilities."""
 
+import os
+import shutil
+import stat
 import tarfile
 import zipfile
-import shutil
 from pathlib import Path
-import os
-import stat
 
 from rich.console import Console
 

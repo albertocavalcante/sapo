@@ -1,10 +1,10 @@
 """Tests for Docker configuration."""
 
+import re
 import tempfile
 from pathlib import Path
-import re
 
-from sapo.cli.install_mode.docker.config import DockerConfig, DatabaseType
+from sapo.cli.install_mode.docker.config import DatabaseType, DockerConfig
 
 
 class TestDockerConfig:

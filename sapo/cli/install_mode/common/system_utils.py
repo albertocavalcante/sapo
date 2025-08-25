@@ -4,7 +4,7 @@ import platform
 import shutil
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple
+
 from rich.console import Console
 
 from . import OperationStatus
@@ -30,7 +30,7 @@ def get_platform() -> Platform:
         return Platform.UNKNOWN
 
 
-def check_disk_space(path: Path) -> Tuple[float, float, float]:
+def check_disk_space(path: Path) -> tuple[float, float, float]:
     """Check available disk space at the specified path.
 
     Args:
@@ -54,7 +54,7 @@ def check_disk_space(path: Path) -> Tuple[float, float, float]:
 
 def set_directory_permissions(
     directory: Path, owner: str, _non_interactive: bool = False
-) -> Tuple[OperationStatus, Optional[str]]:
+) -> tuple[OperationStatus, str | None]:
     """Set permissions on a directory based on platform.
 
     Args:

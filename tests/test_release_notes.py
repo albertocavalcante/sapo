@@ -1,17 +1,19 @@
 """Test release notes functionality."""
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import aiohttp
+import pytest
+
 from sapo.cli.release_notes import (
-    get_map_info,
-    get_topics,
-    get_release_notes,
-    debug_print,
     _find_target_topic,
     _parse_release_content,
-    list_available_versions,
+    debug_print,
     display_release_notes,
+    get_map_info,
+    get_release_notes,
+    get_topics,
+    list_available_versions,
 )
 
 # Mock data for testing

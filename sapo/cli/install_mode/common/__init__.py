@@ -1,10 +1,11 @@
 """Common functionality for installation modes."""
 
-from enum import Enum, auto
-import subprocess  # nosec B404
 import shutil
+import subprocess  # nosec B404
+from enum import Enum, auto
 from pathlib import Path
-from typing import Union, Any
+from typing import Any, Union
+from sapo.cli.platform import Platform as Platform
 
 # Custom types
 PathLike = Union[str, Path]
@@ -20,12 +21,10 @@ class OperationStatus(Enum):
     SKIPPED = auto()  # Added for user-skipped operations
 
 
-class Platform(str, Enum):
-    """Define platform types for installations."""
+"""Note: Platform enum is defined in sapo.cli.platform. Use that instead."""
 
-    LINUX = "linux"
-    MACOS = "macos"
-    WINDOWS = "windows"
+# Backward compatibility re-export for external users importing from
+# sapo.cli.install_mode.common
 
 
 def check_docker_installed() -> bool:

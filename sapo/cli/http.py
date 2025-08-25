@@ -1,8 +1,9 @@
 """HTTP client utilities."""
 
 import os
-from rich.console import Console
+
 import aiohttp
+from rich.console import Console
 
 console = Console()
 

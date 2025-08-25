@@ -9,10 +9,10 @@ import typer
 from sapo.cli.artifactory import (
     ArtifactoryConfig,
     ArtifactoryPackage,
+    get_default_dest_dir,
     install_artifactory,
     list_versions,
     show_info,
-    get_default_dest_dir,
 )
 from sapo.cli.platform import Platform
 

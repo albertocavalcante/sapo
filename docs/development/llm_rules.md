@@ -1,0 +1,127 @@
+# LLM Assistant Rules
+
+This document defines the rules and guidelines to follow when working on the Sapo codebase. These rules are specifically designed for AI assistants working through IDE integrations with available tooling.
+
+## Python Standards
+
+### Environment & Compatibility
+- The code MUST be portable and support multiple platforms (Windows, Linux, macOS)
+- Use pathlib for file path operations, never os.path for new code
+- Always handle platform-specific behaviors explicitly
+
+### Package Management
+- This project uses Poetry >=2.0.0, keep that in mind
+- ALWAYS prefer `pipx` instead of `pip` when needed to run or write documentation
+- New dependencies must be explicitly justified when added
+
+### Version Requirements
+- Use Python 3.13 or above ONLY
+- NEVER write code that requires backward compatibility with earlier Python versions
+
+### Type System
+- ALWAYS use type hints and type annotations
+- Use the most specific types possible (avoid generic `Any` types)
+- Use `Optional[T]` for parameters that can be None
+- Prefer composition over inheritance for complex types
+
+### Dependencies
+- Pydantic is the preferred library for data model and validation
+
+### Code Organization
+- Modules should have a single responsibility
+- Follow existing pattern of using subdirectories for feature groups
+- Related functionality should be grouped by domain not technical role
+- CLI commands in `cli.py`, implementation logic in separate modules
+- Keep modules below 300 lines; split if longer
+
+## Documentation Standards
+- Every module must have a docstring explaining its purpose
+- Every public function/class must have Google-style docstrings
+- Type information in docstrings must match the type hints
+- Examples should be included for complex functions
+- Always include a "Returns" section that clearly specifies return values
+- Document exceptions that may be raised
+
+## CLI Design
+- Use Typer for all command-line interfaces
+- Provide both short and long-form options for common parameters
+- Commands should follow the pattern:
+  - Verb-first naming (`install`, `list`, etc.)
+  - Required parameters should use options, not arguments
+  - Include `--help` output examples in docstrings
+- Use enum types for parameters with fixed choices
+- All commands must have comprehensive help text
+
+## Dev Dependencies and Tools
+- Do not use `black`
+- Linter: use `ruff`
+- Formatter: use `ruff`
+- Prefer tools configuration inside [pyproject.toml](mdc:pyproject.toml)
+- Always make sure linter settings and .editorconfig are in sync
+- ALWAYS execute `poetry run ruff check --fix` and `poetry run ruff format` before considering a feature complete
+
+## Implementation Patterns
+
+### Error Handling
+- Use specific exception types, never generic Exception raising
+- Error messages should be user-friendly and actionable
+- Use Rich for all console output
+- Errors should suggest potential solutions when possible
+- Complex operations should be wrapped in try/except with specific error handling
+- Exit codes should be consistent and documented
+
+### Async Patterns
+- Use asyncio for network operations and file I/O
+- Properly document async functions and their awaitable returns
+- When mixing sync/async, use `asyncio.run()` at the boundary
+- Never use bare `await` in top-level code
+- Always close aiohttp sessions and other resources
+
+### File Operations
+- Use context managers for file operations
+- Always specify file encoding (utf-8)
+- Use atomic write patterns for configuration files
+- Validate file existence before operations
+
+### Configuration
+- Configuration should be validated using Pydantic models
+- Use .env files for secrets but NOT for normal configuration
+- Configuration should be centralized and referenced, not duplicated
+
+## Testing
+- ALWAYS write unit tests
+- Write code in a way it can be tested, refactor if needed
+- ALWAYS run unittests and confirm they're passing e.g. `poetry run pytest`
+- Use pytest fixtures for test setup
+- Mock external dependencies and I/O operations
+- Aim for >85% coverage but prioritize test quality over metrics
+- Tests should validate behavior, not implementation details
+- Use parameterized tests for similar test cases with different inputs
+- Running tests is REQUIRED before considering any feature complete
+
+## External Integrations
+- Always use proper typing for API responses
+- Validate external data with Pydantic models
+- Use timeout handling for all network requests
+- Include proper error handling for API failures
+- Log API interactions at debug level
+
+## Optimization Priorities
+- Readability over premature optimization
+- User experience and reliability over performance
+- Type safety over brevity
+- Clear error messages over terse code
+
+## AI-Specific Considerations
+- When implementing new features, follow existing patterns closely
+- Begin implementation with defining models and interfaces
+- Maintain naming consistency with existing codebase
+- Avoid introducing new libraries for problems that can be solved with existing ones
+- Generated code should be indistinguishable from human-written code
+- Never abbreviate variable or function names
+- Before considering a feature complete:
+  1. Run and confirm all tests pass with `poetry run pytest`
+  2. Run `poetry run ruff check --fix` and `poetry run ruff format`
+  3. Verify code quality meets all rules in this document
+
+These rules are designed to maintain code quality and consistency throughout the codebase and should be followed strictly when generating or modifying code.

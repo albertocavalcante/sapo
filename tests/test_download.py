@@ -4,7 +4,8 @@ import os
 from unittest.mock import MagicMock, patch
 
 import requests
-from sapo.cli.download import download_file, ProgressTracker
+
+from sapo.cli.download import ProgressTracker, download_file
 
 
 def test_progress_tracker():

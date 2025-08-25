@@ -1,0 +1,35 @@
+# Minimal working configuration for JFrog Artifactory OSS
+# This configuration includes only the required keys for OSS version
+
+configVersion: 1
+shared:
+  security:
+    # Join key for secure communication between services
+    # Generated using: sapo generate-joinkey
+    joinKey: "example123.aesgcm256.abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
+  
+  node:
+    # Unique identifier for this Artifactory node
+    id: "art1"
+    
+    # IP address or hostname
+    ip: "localhost"
+    
+    # High Availability is not supported in OSS
+    haEnabled: false
+  
+  database:
+    # PostgreSQL configuration (recommended for production)
+    type: postgresql
+    driver: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/artifactory
+    username: artifactory
+    # Password should be encrypted using sapo encrypt-password
+    password: example123.aesgcm256.encryptedPasswordHere
+    
+    # For development/testing, you can use Derby instead:
+    # type: derby
+    # driver: org.apache.derby.jdbc.EmbeddedDriver
+    # url: jdbc:derby:data/derby/artifactory;create=true
+    # username: artifactory
+    # password: password

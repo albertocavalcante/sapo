@@ -1,12 +1,12 @@
 """Docker container management for Artifactory."""
 
-import subprocess  # nosec B404
 import asyncio
-from pathlib import Path
-from typing import Optional
+import subprocess  # nosec B404
 from enum import Enum
+from pathlib import Path
 
 from rich.console import Console
+
 from ..common import run_docker_command
 
 
@@ -23,7 +23,7 @@ class ContainerStatus(str, Enum):
 class DockerContainerManager:
     """Manages Docker containers for Artifactory."""
 
-    def __init__(self, compose_dir: Path, console: Optional[Console] = None):
+    def __init__(self, compose_dir: Path, console: Console | None = None):
         self.compose_dir = compose_dir
         self.console = console or Console()
 

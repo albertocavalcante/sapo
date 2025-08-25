@@ -1,14 +1,13 @@
 """JFrog Artifactory OSS installer module."""
 
-from pathlib import Path
-from typing import Optional
 import os
+from pathlib import Path
 
 import requests
+import semver
+import typer
 from pydantic import BaseModel, ConfigDict
 from rich.console import Console
-import typer
-import semver
 
 from .archive import extract_archive
 from .checksum import verify_checksum
@@ -26,7 +25,7 @@ class ArtifactoryPackage(BaseModel):
 
     version: str
     platform: Platform
-    size: Optional[str] = None
+    size: str | None = None
 
     @property
     def filename(self) -> str:
@@ -62,8 +61,8 @@ class ArtifactoryConfig:
     def __init__(
         self,
         version: str,
-        platform: Optional[Platform] = None,
-        dest_dir: Optional[Path] = None,
+        platform: Platform | None = None,
+        dest_dir: Path | None = None,
         keep_archive: bool = False,
         verify_checksum: bool = True,
         verbose: bool = False,
@@ -124,8 +123,8 @@ class ArtifactoryConfig:
 
 def install_artifactory(
     version: str,
-    platform: Optional[Platform] = None,
-    destination: Optional[Path] = None,
+    platform: Platform | None = None,
+    destination: Path | None = None,
     keep_archive: bool = False,
     verify_checksum_enabled: bool = True,
     non_interactive: bool = False,
@@ -224,7 +223,7 @@ def list_versions(limit: int = 10) -> None:
         config = ArtifactoryConfig(version="7.98.17", platform=current_platform)
 
         # Get available versions
-        from .version import get_available_versions, display_versions_table
+        from .version import display_versions_table, get_available_versions
 
         versions = get_available_versions(config.base_url)
 
