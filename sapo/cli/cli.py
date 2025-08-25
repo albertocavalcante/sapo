@@ -7,7 +7,7 @@ using the Typer framework to define the command structure and options.
 import asyncio
 import datetime
 from pathlib import Path
-from typing import Optional, Union, Dict, cast
+from typing import cast
 
 import typer
 from rich.console import Console
@@ -47,7 +47,7 @@ def install(
     version: str = typer.Option(
         "7.111.9", "--version", "-v", help="Artifactory version to install"
     ),
-    mode: InstallMode = typer.Option(
+    mode: InstallMode | None = typer.Option(
         None, "--mode", "-m", help="Installation mode (docker, local, helm)"
     ),
     platform: Platform = typer.Option(
@@ -56,7 +56,7 @@ def install(
         "-p",
         help="Platform to download (for local mode)",
     ),
-    destination: Optional[Path] = typer.Option(
+    destination: Path | None = typer.Option(
         None,
         "--destination",
         "--dest",
@@ -88,53 +88,53 @@ def install(
         "--use-volumes",
         help="Use named Docker volumes instead of bind mounts (Docker mode only)",
     ),
-    volume_driver: Optional[str] = typer.Option(
+    volume_driver: str | None = typer.Option(
         None,
         "--volume-driver",
         help="Docker volume driver to use for volumes (Docker mode only)",
     ),
-    data_volume_size: Optional[str] = typer.Option(
+    data_volume_size: str | None = typer.Option(
         None, "--data-size", help="Size for data volume, e.g. '10G' (Docker mode only)"
     ),
-    logs_volume_size: Optional[str] = typer.Option(
+    logs_volume_size: str | None = typer.Option(
         None, "--logs-size", help="Size for logs volume, e.g. '3G' (Docker mode only)"
     ),
-    backup_volume_size: Optional[str] = typer.Option(
+    backup_volume_size: str | None = typer.Option(
         None,
         "--backup-size",
         help="Size for backup volume, e.g. '20G' (Docker mode only)",
     ),
-    db_volume_size: Optional[str] = typer.Option(
+    db_volume_size: str | None = typer.Option(
         None,
         "--db-size",
         help="Size for database volume, e.g. '15G' (Docker mode only)",
     ),
-    etc_volume_size: Optional[str] = typer.Option(
+    etc_volume_size: str | None = typer.Option(
         None,
         "--etc-size",
         help="Size for etc volume, e.g. '1G' (Docker mode only)",
     ),
-    data_host_path: Optional[Path] = typer.Option(
+    data_host_path: Path | None = typer.Option(
         None,
         "--data-path",
         help="Host path to bind for data volume (Docker mode only)",
     ),
-    logs_host_path: Optional[Path] = typer.Option(
+    logs_host_path: Path | None = typer.Option(
         None,
         "--logs-path",
         help="Host path to bind for logs volume (Docker mode only)",
     ),
-    backup_host_path: Optional[Path] = typer.Option(
+    backup_host_path: Path | None = typer.Option(
         None,
         "--backup-path",
         help="Host path to bind for backup volume (Docker mode only)",
     ),
-    db_host_path: Optional[Path] = typer.Option(
+    db_host_path: Path | None = typer.Option(
         None,
         "--db-path",
         help="Host path to bind for database volume (Docker mode only)",
     ),
-    etc_host_path: Optional[Path] = typer.Option(
+    etc_host_path: Path | None = typer.Option(
         None,
         "--etc-path",
         help="Host path to bind for etc volume (Docker mode only)",
@@ -299,19 +299,19 @@ def volume_list() -> None:
 @volume_app.command(name="create")
 def volume_create(
     name: str = typer.Option(..., "--name", "-n", help="Base name for the volume set"),
-    driver: Optional[str] = typer.Option(
+    driver: str | None = typer.Option(
         None, "--driver", "-d", help="Docker volume driver to use"
     ),
-    data_size: Optional[str] = typer.Option(
+    data_size: str | None = typer.Option(
         "10G", "--data-size", help="Size for data volume"
     ),
-    logs_size: Optional[str] = typer.Option(
+    logs_size: str | None = typer.Option(
         "3G", "--logs-size", help="Size for logs volume"
     ),
-    backup_size: Optional[str] = typer.Option(
+    backup_size: str | None = typer.Option(
         "20G", "--backup-size", help="Size for backup volume"
     ),
-    db_size: Optional[str] = typer.Option(
+    db_size: str | None = typer.Option(
         "15G", "--db-size", help="Size for database volume"
     ),
 ) -> None:
@@ -335,9 +335,7 @@ def volume_create(
         volumes = volume_manager.create_volume_set(
             name,
             driver=driver,
-            size_opts=cast(
-                Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_sizes
-            ),
+            size_opts=cast(dict[VolumeType | str, dict[str, str]] | None, volume_sizes),
         )
 
         # Display created volumes
@@ -422,13 +420,13 @@ def volume_restore(
     backup_file: Path = typer.Option(
         ..., "--file", "-f", help="Backup file to restore from"
     ),
-    volume_name: Optional[str] = typer.Option(
+    volume_name: str | None = typer.Option(
         None,
         "--name",
         "-n",
         help="Name of volume to restore to (will create new if not provided)",
     ),
-    volume_type: Optional[VolumeType] = typer.Option(
+    volume_type: VolumeType | None = typer.Option(
         None,
         "--type",
         "-t",
@@ -494,112 +492,6 @@ def volume_migrate(
         console.print(f"[green]Successfully migrated data from {source} to {target}[/]")
     else:
         console.print("[bold red]Failed to migrate data[/]")
-        raise typer.Exit(1)
-
-
-@volume_app.command()
-def list() -> None:
-    """List Docker volumes for Artifactory."""
-    console = Console()
-    volume_manager = VolumeManager(console=console)
-    volume_manager.display_volumes()
-
-
-@volume_app.command()
-def backup(
-    name: str = typer.Option(..., "--name", "-n", help="Name of the volume to backup"),
-    output_dir: Path = typer.Option(
-        Path.cwd() / "backups", "--output", "-o", help="Directory to save backup"
-    ),
-    compress: bool = typer.Option(
-        True, "--compress/--no-compress", help="Compress backup with gzip"
-    ),
-) -> None:
-    """Backup Docker volume for Artifactory."""
-    console = Console()
-    volume_manager = VolumeManager(console=console)
-    status, _ = volume_manager.backup_volume(name, output_dir, compress=compress)
-    if status != OperationStatus.SUCCESS:
-        raise typer.Exit(1)
-
-
-@volume_app.command()
-def restore(
-    file: Path = typer.Option(..., "--file", "-f", help="Backup file to restore from"),
-    name: str = typer.Option(
-        None,
-        "--name",
-        "-n",
-        help="Name of volume to restore to (optional, will create new if not specified)",
-    ),
-    type: VolumeType = typer.Option(
-        None, "--type", "-t", help="Type of volume to create if name not specified"
-    ),
-    host_path: Path = typer.Option(
-        None, "--host-path", help="Optional host path to bind the new volume to"
-    ),
-) -> None:
-    """Restore Docker volume for Artifactory."""
-    console = Console()
-    volume_manager = VolumeManager(console=console)
-    status, _ = volume_manager.restore_volume(file, name, type, host_path)
-    if status != OperationStatus.SUCCESS:
-        raise typer.Exit(1)
-
-
-@volume_app.command()
-def create(
-    type: VolumeType = typer.Option(
-        ..., "--type", "-t", help="Type of volume to create"
-    ),
-    name_suffix: str = typer.Option(
-        None, "--suffix", "-s", help="Suffix for volume name"
-    ),
-    driver: str = typer.Option("local", "--driver", "-d", help="Docker volume driver"),
-    host_path: Path = typer.Option(
-        None, "--host-path", "-p", help="Host path to bind volume to"
-    ),
-    size: str = typer.Option(None, "--size", help="Size for volume (e.g. '10G')"),
-    display_name: str = typer.Option(
-        None, "--display-name", help="Human-readable name for the volume"
-    ),
-) -> None:
-    """Create Docker volume for Artifactory."""
-    console = Console()
-    volume_manager = VolumeManager(console=console)
-
-    driver_opts = {"size": size} if size else None
-
-    try:
-        volume_name = volume_manager.create_volume(
-            type,
-            name_suffix,
-            driver=driver,
-            driver_opts=driver_opts,
-            host_path=host_path,
-            display_name=display_name,
-        )
-        console.print(f"[green]Created volume:[/] {volume_name}")
-    except Exception as e:
-        console.print(f"[bold red]Failed to create volume:[/] {e}")
-        raise typer.Exit(1)
-
-
-@volume_app.command()
-def migrate(
-    source: str = typer.Option(..., "--source", "-s", help="Source volume name"),
-    target: str = typer.Option(..., "--target", "-t", help="Target volume name"),
-    temp_dir: Path = typer.Option(
-        Path.cwd() / "temp", "--temp-dir", help="Temporary directory for migration"
-    ),
-) -> None:
-    """Migrate data between Docker volumes."""
-    console = Console()
-    volume_manager = VolumeManager(console=console)
-
-    success = asyncio.run(volume_manager.migrate_data(source, target, temp_dir))
-    if not success:
-        console.print("[bold red]Migration failed[/]")
         raise typer.Exit(1)
 
 

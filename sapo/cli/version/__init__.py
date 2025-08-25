@@ -1,11 +1,11 @@
 """Version listing and management module."""
 
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Optional  # noqa: F401 (kept for exported API types)
 
 import requests
 from rich.console import Console
-from rich.progress import Progress, TextColumn, BarColumn
+from rich.progress import BarColumn, Progress, TextColumn
 from rich.table import Table
 
 from ..platform import Platform
@@ -14,7 +14,7 @@ from ..size import format_size
 console = Console()
 
 
-def parse_version_from_html(line: str) -> Optional[str]:
+def parse_version_from_html(line: str) -> str | None:
     """
     Parse version from HTML link line.
 
@@ -34,7 +34,7 @@ def parse_version_from_html(line: str) -> Optional[str]:
     return version
 
 
-def get_package_info(url: str) -> Tuple[Optional[str], Optional[str], str]:
+def get_package_info(url: str) -> tuple[str | None, str | None, str]:
     """
     Get package size and last modified timestamp from URL.
 
@@ -75,7 +75,7 @@ def get_package_info(url: str) -> Tuple[Optional[str], Optional[str], str]:
     return size_str, timestamp, status
 
 
-def get_available_versions(base_url: str) -> List[str]:
+def get_available_versions(base_url: str) -> list[str]:
     """
     Get list of available versions from the server.
 
@@ -92,7 +92,9 @@ def get_available_versions(base_url: str) -> List[str]:
         response = requests.get(f"{base_url}/jfrog-artifactory-oss/", timeout=30)
         response.raise_for_status()
     except Exception as e:
-        raise requests.exceptions.RequestException(f"Error fetching versions: {str(e)}")
+        raise requests.exceptions.RequestException(
+            f"Error fetching versions: {str(e)}"
+        ) from e
 
     versions = []
     for line in response.text.splitlines():
@@ -107,7 +109,7 @@ def get_available_versions(base_url: str) -> List[str]:
 
 def display_versions_table(
     base_url: str,
-    versions: List[str],
+    versions: list[str],
     platform: Platform,
     package_pattern: str,
     limit: int = 10,

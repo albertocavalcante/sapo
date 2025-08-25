@@ -5,17 +5,18 @@ generating the necessary docker-compose.yml and system.yaml files.
 """
 
 import asyncio
-import string
 import secrets
+import string
 from pathlib import Path
-from typing import Optional, Dict, Union, cast
+from typing import cast
+
 import typer
 from rich.console import Console
 
-from .config import DockerConfig, DatabaseType
-from .files import DockerFileManager
-from .container import DockerContainerManager
 from ..common import OperationStatus
+from .config import DatabaseType, DockerConfig
+from .container import DockerContainerManager
+from .files import DockerFileManager
 
 # Import volume management functionality
 from .volume import VolumeManager, VolumeType
@@ -75,15 +76,15 @@ async def run_docker_compose(compose_dir: Path, debug: bool = False) -> bool:
 async def install_docker(
     version: str,
     port: int = 8082,
-    data_dir: Optional[Path] = None,
+    data_dir: Path | None = None,
     non_interactive: bool = False,
     start: bool = False,
     use_derby: bool = False,
-    joinkey: Optional[str] = None,
+    joinkey: str | None = None,
     debug: bool = False,
     use_named_volumes: bool = False,
-    volume_driver: Optional[str] = None,
-    volume_sizes: Optional[Dict[str, str]] = None,
+    volume_driver: str | None = None,
+    volume_sizes: dict[str, str] | None = None,
 ) -> None:
     """Install Artifactory using Docker.
 
@@ -198,17 +199,16 @@ async def install_docker(
                             "size": volume_sizes[volume_type.value]
                         }
 
-                # Add etc volume too
-                volume_opts[VolumeType.DATA] = volume_opts.get(
-                    VolumeType.DATA, {"size": "1G"}
-                )
+                # Ensure etc volume has a size option
+                if VolumeType.ETC not in volume_opts:
+                    volume_opts[VolumeType.ETC] = {"size": "1G"}
 
                 # Create the volumes
                 volumes = volume_manager.create_volume_set(
                     version_suffix,
                     driver=volume_driver,
                     size_opts=cast(
-                        Optional[Dict[Union[VolumeType, str], Dict[str, str]]],
+                        dict[VolumeType | str, dict[str, str]] | None,
                         volume_opts,
                     ),
                 )
@@ -217,12 +217,13 @@ async def install_docker(
                 for volume_type, name in volumes.items():
                     volume_names[volume_type.value] = name
 
-                # Also create an etc volume
+                # Also create an etc volume with appropriate type and size
+                etc_opts = volume_opts.get(VolumeType.ETC, {"size": "1G"})
                 etc_volume_name = volume_manager.create_volume(
-                    VolumeType.DATA,
+                    VolumeType.ETC,
                     f"etc_{version_suffix}",
                     driver=volume_driver,
-                    driver_opts=volume_opts.get(VolumeType.DATA),
+                    driver_opts=etc_opts,
                 )
                 volume_names["etc"] = etc_volume_name
 
@@ -366,8 +367,8 @@ async def install_docker(
 # Synchronous entry point for CLI
 def install_docker_sync(
     version: str = "latest",
-    platform: Optional[str] = None,
-    destination: Optional[Path] = None,
+    platform: str | None = None,
+    destination: Path | None = None,
     port: int = 8081,
     start: bool = True,
     non_interactive: bool = False,
@@ -375,8 +376,8 @@ def install_docker_sync(
     debug: bool = False,
     use_named_volumes: bool = False,
     volume_driver: str = "local",
-    volume_sizes: Optional[dict[str, str]] = None,
-    host_paths: Optional[dict[str, Path]] = None,
+    volume_sizes: dict[str, str] | None = None,
+    host_paths: dict[str, Path] | None = None,
 ) -> OperationStatus:
     """Synchronous wrapper for the install_docker function.
 
@@ -414,25 +415,23 @@ def install_docker_sync(
         )
         return OperationStatus.SUCCESS
     except KeyboardInterrupt:
-        print("\nOperation cancelled by user.")
+        local_console = Console()
+        local_console.print("\n[yellow]Operation cancelled by user.[/]")
         return OperationStatus.WARNING
     except Exception as e:
         # Catch and report any exceptions
-        from rich.console import Console
-
-        console = Console()
-        console.print(f"[bold red]Error during installation:[/] {e}")
+        temp_console = Console()
+        temp_console.print(f"[bold red]Error during installation:[/] {e}")
 
         # Print traceback in debug mode
         if debug:
             import traceback
 
-            console.print(traceback.format_exc())
-
+            temp_console.print(traceback.format_exc())
         return OperationStatus.ERROR
 
 
-_password_cache: Dict[str, str] = {}
+_password_cache: dict[str, str] = {}
 
 
 def generate_password(key: str) -> str:

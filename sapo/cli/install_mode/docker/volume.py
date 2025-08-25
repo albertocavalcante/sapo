@@ -4,15 +4,15 @@ This module provides functionality to create, manage, backup, and migrate
 Artifactory data between Docker volumes.
 """
 
-import subprocess  # nosec B404
 import datetime
-import os
 import json
+import subprocess  # nosec B404
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Any, Union
+from typing import Any
 
 from rich.console import Console
+import os
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
@@ -35,7 +35,7 @@ class VolumeManager:
 
     def __init__(
         self,
-        console: Optional[Console] = None,
+        console: Console | None = None,
         volume_prefix: str = "artifactory",
     ):
         """Initialize volume manager.
@@ -52,7 +52,7 @@ class VolumeManager:
         }
 
     def _run_command(
-        self, cmd: List[str], check: bool = True, capture_output: bool = True
+        self, cmd: list[str], check: bool = True, capture_output: bool = True
     ) -> subprocess.CompletedProcess:
         """Run a command and return the result.
 
@@ -89,7 +89,7 @@ class VolumeManager:
             )
             return False
 
-    def list_volumes(self) -> List[Dict[str, str]]:
+    def list_volumes(self) -> list[dict[str, str]]:
         """List all Artifactory volumes.
 
         Returns:
@@ -129,12 +129,12 @@ class VolumeManager:
     def create_volume(
         self,
         volume_type: VolumeType,
-        name_suffix: Optional[str] = None,
-        driver: Optional[str] = None,
-        driver_opts: Optional[Dict[str, str]] = None,
-        labels: Optional[Dict[str, str]] = None,
-        host_path: Optional[Path] = None,
-        display_name: Optional[str] = None,
+        name_suffix: str | None = None,
+        driver: str | None = None,
+        driver_opts: dict[str, str] | None = None,
+        labels: dict[str, str] | None = None,
+        host_path: Path | None = None,
+        display_name: str | None = None,
     ) -> str:
         """Create a new volume for Artifactory.
 
@@ -168,7 +168,7 @@ class VolumeManager:
 
         # Handle explicit host path binding
         if host_path:
-            # Make sure the path exists
+            # Ensure the path exists (tests mock os.makedirs)
             os.makedirs(host_path, exist_ok=True)
 
             # Create driver options if not provided
@@ -269,7 +269,7 @@ class VolumeManager:
 
     def backup_volume(
         self, volume_name: str, backup_path: Path, compress: bool = False
-    ) -> Tuple[OperationStatus, Optional[Path]]:
+    ) -> tuple[OperationStatus, Path | None]:
         """Backup a volume to a tar file.
 
         Args:
@@ -354,10 +354,10 @@ class VolumeManager:
     def restore_volume(
         self,
         backup_file: Path,
-        volume_name: Optional[str] = None,
-        volume_type: Optional[VolumeType] = None,
-        host_path: Optional[Path] = None,
-    ) -> Tuple[OperationStatus, Optional[str]]:
+        volume_name: str | None = None,
+        volume_type: VolumeType | None = None,
+        host_path: Path | None = None,
+    ) -> tuple[OperationStatus, str | None]:
         """Restore a volume from a backup file.
 
         Args:
@@ -468,7 +468,7 @@ class VolumeManager:
                 self.console.print(f"[bold red]Failed to restore volume:[/] {e}")
                 return OperationStatus.ERROR, None
 
-    def get_volume_info(self, volume_name: str) -> Optional[Dict[str, Any]]:
+    def get_volume_info(self, volume_name: str) -> dict[str, Any] | None:
         """Get information about a volume.
 
         Args:
@@ -493,7 +493,7 @@ class VolumeManager:
         except Exception:
             return None
 
-    def get_volume_size(self, volume_name: str) -> Optional[Tuple[float, str]]:
+    def get_volume_size(self, volume_name: str) -> tuple[float, str] | None:
         """Get the size of a volume in human-readable format.
 
         Args:
@@ -581,13 +581,13 @@ class VolumeManager:
 
     def create_volume_set(
         self,
-        name_suffix: Optional[str] = None,
-        driver: Optional[str] = None,
-        size_opts: Optional[Dict[Union[VolumeType, str], Dict[str, str]]] = None,
-        host_paths: Optional[Dict[Union[VolumeType, str], Path]] = None,
-        labels: Optional[Dict[str, str]] = None,
-        artifactory_version: Optional[str] = None,
-    ) -> Dict[VolumeType, str]:
+        name_suffix: str | None = None,
+        driver: str | None = None,
+        size_opts: dict[VolumeType | str, dict[str, str]] | None = None,
+        host_paths: dict[VolumeType | str, Path] | None = None,
+        labels: dict[str, str] | None = None,
+        artifactory_version: str | None = None,
+    ) -> dict[VolumeType, str]:
         """Create a complete set of volumes for Artifactory.
 
         Args:
@@ -704,8 +704,8 @@ class VolumeManager:
         return volumes
 
     def generate_compose_volumes(
-        self, volumes: Dict[VolumeType, str]
-    ) -> Dict[str, Dict[str, Union[str, bool]]]:
+        self, volumes: dict[VolumeType, str]
+    ) -> dict[str, dict[str, str | bool]]:
         """Generate volume configuration for docker-compose.yml.
 
         Args:
@@ -714,7 +714,7 @@ class VolumeManager:
         Returns:
             Dict[str, Dict[str, Union[str, bool]]]: Volume configuration for docker-compose
         """
-        compose_volumes: Dict[str, Dict[str, Union[str, bool]]] = {}
+        compose_volumes: dict[str, dict[str, str | bool]] = {}
 
         for volume_type, volume_name in volumes.items():
             compose_volumes[volume_name] = {"external": True}
@@ -861,7 +861,7 @@ class VolumeManager:
                 self.console.print(f"[bold red]Failed to migrate data:[/] {e}")
                 return False
 
-    def analyze_data_usage(self, volume_name: str) -> Dict[str, Any]:
+    def analyze_data_usage(self, volume_name: str) -> dict[str, Any]:
         """Analyze the data usage within a volume.
 
         Args:
@@ -931,7 +931,7 @@ class VolumeManager:
 
     def create_bind_mount_spec(
         self, host_path: Path, container_path: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a bind mount specification for docker-compose.
 
         Args:
@@ -950,7 +950,7 @@ class VolumeManager:
             "target": container_path,
         }
 
-    def get_volume_labels(self, volume_name: str) -> Dict[str, str]:
+    def get_volume_labels(self, volume_name: str) -> dict[str, str]:
         """Get the labels of a volume.
 
         Args:
