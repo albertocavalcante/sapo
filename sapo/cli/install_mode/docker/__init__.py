@@ -205,9 +205,12 @@ async def install_docker(
 
                 # Create the volumes
                 volumes = volume_manager.create_volume_set(
-                    version_suffix, 
-                    driver=volume_driver, 
-                    size_opts=cast(Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_opts)
+                    version_suffix,
+                    driver=volume_driver,
+                    size_opts=cast(
+                        Optional[Dict[Union[VolumeType, str], Dict[str, str]]],
+                        volume_opts,
+                    ),
                 )
 
                 # Store volume names for compose file generation
@@ -276,7 +279,7 @@ async def install_docker(
         if start:
             console.print("\n[bold]Starting Artifactory with Docker Compose...[/]")
 
-            # Create container manager  
+            # Create container manager
             if config.output_dir is None:
                 raise ValueError("output_dir must be set before starting containers")
             container_manager = DockerContainerManager(config.output_dir, console)

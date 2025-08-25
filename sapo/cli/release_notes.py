@@ -41,7 +41,8 @@ async def get_map_info(
                 )
                 return None
 
-            return await response.json()
+            result: dict[str, Any] = await response.json()
+            return result
     except Exception as e:
         debug_print(f"Error loading map info: {str(e)}", debug)
         return None
@@ -60,7 +61,8 @@ async def get_topics(
                 debug_print(f"Failed to load topics. Status: {response.status}", debug)
                 return None
 
-            return await response.json()
+            result: list[dict[str, Any]] = await response.json()
+            return result
     except Exception as e:
         debug_print(f"Error loading topics: {str(e)}", debug)
         return None
@@ -92,20 +94,25 @@ async def _parse_release_content(
 
     # Extract resolved issues table
     issues_table = soup.find("table", class_="informaltable")
-    if not issues_table:
+    if (
+        not issues_table
+        or not hasattr(issues_table, "find")
+        or not hasattr(issues_table, "find_all")
+    ):
         debug_print("No issues table found in content", debug)
         return None
 
     # Get headers and rows
     headers = []
     header_row = issues_table.find("tr")
-    if header_row:
+    if header_row and hasattr(header_row, "find_all"):
         headers = [th.get_text().strip() for th in header_row.find_all(["th"])]
 
     rows = []
     for row in issues_table.find_all("tr")[1:]:  # Skip header row
-        cells = [td.get_text().strip() for td in row.find_all(["td"])]
-        rows.append(cells)
+        if hasattr(row, "find_all"):
+            cells = [td.get_text().strip() for td in row.find_all(["td"])]
+            rows.append(cells)
 
     # Group issues by severity
     issues = []
@@ -209,20 +216,24 @@ async def list_available_versions(debug: bool = False) -> List[str]:
                 versions = []
                 for link in soup.find_all("a", href=True):
                     # Try to extract version from URL
-                    url_match = re.search(
-                        r"artifactory-(\d+\.\d+\.\d+)-self-hosted",
-                        link["href"],
-                    )
-                    if url_match:
-                        version = url_match.group(1)
-                        if version not in versions:
-                            versions.append(version)
-                            continue
+                    if hasattr(link, "get") and link.get("href"):
+                        url_match = re.search(
+                            r"artifactory-(\d+\.\d+\.\d+)-self-hosted",
+                            str(link.get("href")),
+                        )
+                        if url_match:
+                            version = url_match.group(1)
+                            if version not in versions:
+                                versions.append(version)
+                                continue
 
                     # Try to extract version from link text
-                    text_match = re.match(r"^\d+\.\d+\.\d+$", link.text.strip())
-                    if text_match and link.text.strip() not in versions:
-                        versions.append(link.text.strip())
+                    if hasattr(link, "text") and link.text:
+                        text_match = re.match(
+                            r"^\d+\.\d+\.\d+$", str(link.text).strip()
+                        )
+                        if text_match and str(link.text).strip() not in versions:
+                            versions.append(str(link.text).strip())
 
                 versions.sort(key=lambda v: [int(x) for x in v.split(".")])
                 return versions

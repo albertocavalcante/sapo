@@ -333,9 +333,11 @@ def volume_create(
     try:
         # Create volumes
         volumes = volume_manager.create_volume_set(
-            name, 
-            driver=driver, 
-            size_opts=cast(Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_sizes)
+            name,
+            driver=driver,
+            size_opts=cast(
+                Optional[Dict[Union[VolumeType, str], Dict[str, str]]], volume_sizes
+            ),
         )
 
         # Display created volumes
