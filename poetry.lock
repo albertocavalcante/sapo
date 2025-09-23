@@ -2091,14 +2091,14 @@ telegram = ["requests"]
 
 [[package]]
 name = "typer"
-version = "0.15.2"
+version = "0.19.2"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "typer-0.15.2-py3-none-any.whl", hash = "sha256:46a499c6107d645a9c13f7ee46c5d5096cae6f5fc57dd11eccbbb9ae3e44ddfc"},
-    {file = "typer-0.15.2.tar.gz", hash = "sha256:ab2fab47533a813c49fe1f16b1a370fd5819099c00b119e0633df65f22144ba5"},
+    {file = "typer-0.19.2-py3-none-any.whl", hash = "sha256:755e7e19670ffad8283db353267cb81ef252f595aa6834a0d1ca9312d9326cb9"},
+    {file = "typer-0.19.2.tar.gz", hash = "sha256:9ad824308ded0ad06cc716434705f691d4ee0bfd0fb081839d2e426860e7fdca"},
 ]
 
 [package.dependencies]
@@ -2264,4 +2264,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "274ecce3163382c633698ad257a0ccccb3fc51062ed6392a87c15d96d3717e9e"
+content-hash = "59cbb7fa908430af5daffafef87b2d08bd76c5f02c256cef9732c64ff38710b3"
