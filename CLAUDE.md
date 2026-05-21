@@ -1,16 +1,18 @@
 # Claude Code Memory
 
 ## Repository Information
-- **Repository**: albertocavalcante/sapo
-- **GitHub URL**: https://github.com/albertocavalcante/sapo
+- **Primary**: adsc/sapo on Forgejo — https://git.alberto.engineer/adsc/sapo
+- **Mirror**: albertocavalcante/sapo on GitHub — https://github.com/albertocavalcante/sapo
 - **Main branch**: main
-- **Current working branch**: main
 
 ## Git Remotes
-- **origin**: https://github.com/albertocavalcante/sapo.git (primary working repo)
+- **origin** (fetch): https://git.alberto.engineer/adsc/sapo.git
+- **origin** (push): dual push to Forgejo + GitHub (mirror)
+- **github**: https://github.com/albertocavalcante/sapo.git (explicit GitHub-only remote)
 
-## GitHub CLI Commands
-When creating PRs, use: `gh pr create --repo albertocavalcante/sapo`
+## PRs
+- For Forgejo PRs: use the API or web UI at git.alberto.engineer
+- `gh` only works against the GitHub mirror — don't open canonical PRs there
 
 ## Project Commands
 - **Package Manager**: Poetry (use `poetry add` not `pip install`)
