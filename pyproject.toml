@@ -30,7 +30,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
 pytest-cov = "^7.0.0"
-mypy = "^1.15.0"
+mypy = "^2.0.0"
 ruff = "^0.15.0"
 bandit = "^1.8.3"
 safety = "^3.3.1"
